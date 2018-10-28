@@ -13,7 +13,7 @@ install:
   - conda info -a
 
   # Replace dep1 dep2 ... with your dependencies
-  - conda create -q -f environment.yml
+  - conda env create -q -f environment.yml
   - source activate nbody
   - python setup.py install
 
