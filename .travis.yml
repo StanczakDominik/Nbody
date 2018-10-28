@@ -19,3 +19,4 @@ install:
 
 script:
   - pytest nbody
+  - NUMBA_DISABLE_JIT=1 pytest nbody
