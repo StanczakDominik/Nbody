@@ -1,0 +1,9 @@
+name: nbody
+dependencies:
+  - python=3.7
+  - numba # TODO pin versions
+  - numpy
+  - pytest
+  # TODO? - cudatoolkit
+#  - pip:
+#    - Flask-Testing
