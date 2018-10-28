@@ -24,4 +24,4 @@ matrix:
   - name: "Numba NoJIT unit tests"
     python: "3.6"
     env: NUMBA_DISABLE_JIT=1
-  script: pytest nbody
+script: pytest nbody
