@@ -1,1 +1,0 @@
-from .forces import lenard_jones_force
