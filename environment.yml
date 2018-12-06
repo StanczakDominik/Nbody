@@ -1,9 +1,14 @@
 name: nbody
+channels:
+- conda-forge
+- rlehe 
 dependencies:
   - python=3.7
   - numba # TODO pin versions
   - numpy
   - pytest
-  # TODO? - cudatoolkit
-#  - pip:
-#    - Flask-Testing
+  - openpmd-api
+  - matplotlib
+  - cudatoolkit
+  - click
+  - openpmd_viewer
