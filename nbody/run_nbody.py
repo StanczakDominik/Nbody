@@ -1,4 +1,3 @@
-# from nbody import calculate_forces, calculate_movements, accelerate, move, save_iteration
 from nbody.forces.numpy_forces import calculate_forces
 # import h5py
 
