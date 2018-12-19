@@ -9,7 +9,7 @@ def accelerate(p: np.array, forces: np.array, dt: float):
 
 def move(r: np.array, p: np.array, m: np.array, dt: float, boundary_conditions: bool = None, L = None):
     r += dt * p / m
-    if boundary_conditions=="periodic":
+    if boundary_conditions == "periodic":
         L = parse_L(L)
         r %= L
         

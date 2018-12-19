@@ -1,9 +1,38 @@
 import numpy as np
 
-def lenard_jones_force(r, well_depth=1, diameter=1):
+def lenard_jones_force(r, well_depth=1, diameter=1, *args, **kwargs):
+    """
+
+    Parameters
+    ----------
+    r : float
+        distance between particles
+    well_depth :
+    diameter :
+    args :
+    kwargs :
+
+    Returns
+    -------
+
+    """
     return - 12 * well_depth *  ((diameter / r) ** 11 - (diameter / r) ** 5 )
 
-def calculate_LJ_forces(r):
+def calculate_forces(r: np.ndarray, force_law = lenard_jones_force, *args, **kwargs):
+    """
+
+    Parameters
+    ----------
+    r :
+        Nx3 array of particle positions
+    args :
+    kwargs :
+        passed along to the force law
+
+    Returns
+    -------
+
+    """
     # 1. get a NxNx3 antisymmetric (upper triangular) matrix of vector distances
     # 2a. from 1 get a normalized NxNx3 antisymmetric (matrix of direction vectors
     # 2b. from 1 get a NxN (upper triangular due to symmetry) matrix of scalar distances
@@ -16,15 +45,11 @@ def calculate_LJ_forces(r):
     distances_ij = np.sqrt(np.sum(rij ** 2, axis=2, keepdims=True))
     distances_ij[np.arange(N), np.arange(N), :] = np.inf
     directions_ij = rij / distances_ij
-    forces = lenard_jones_force(distances_ij) * directions_ij
+    forces = force_law(distances_ij, *args, **kwargs) * directions_ij
     return forces.sum(axis=1)
 
 def lenard_jones_potential(r1, r2, well_depth=1, diameter=1):
     r = r1 - r2
     norm_r = np.linalg.norm(r)
     return 4 * well_depth * ((diameter / norm_r) ** 12 - (diameter / norm_r) ** 6 )
-
-def calculate_forces(forces, r, p, m):
-    forces[...] = calculate_LJ_forces(r)
-
 
