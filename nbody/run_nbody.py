@@ -2,7 +2,9 @@
 from forces.numpy_forces import calculate_forces
 import numpy as np
 import h5py
-import click # TODO cmd-line interface
+
+from nbody.integrators import verlet_step
+
 
 def accelerate(p: np.array, forces: np.array, dt: float):
     p += dt * forces
@@ -57,12 +59,6 @@ def initialize_matrices(N, json_data=None):
     dt = 0.001 # TODO load from json
     return m, q, r, p, forces, movements, dt
 
-def verlet_step(r, p, m, forces, dt):
-    # Verlet algorithm - Allen page 10
-    accelerate(p, forces, dt/2)
-    move(r, p, m, dt)
-    calculate_forces(forces, r, p, m)
-    accelerate(p, forces, dt/2)
 
 def save_iteration(i_iteration, hdf5_file, r, p, m, q):
     print(i_iteration, r.mean(axis=0), p.mean(axis=0))

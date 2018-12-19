@@ -13,6 +13,7 @@ install:
   - conda info -a
 
   # Replace dep1 dep2 ... with your dependencies
+  - pip install codecov
   - conda env create -q -f environment.yml
   - source activate nbody
   - python setup.py install
@@ -25,3 +26,6 @@ matrix:
     python: "3.6"
     env: NUMBA_DISABLE_JIT=1
 script: pytest nbody
+
+after_success:
+  - codecov
