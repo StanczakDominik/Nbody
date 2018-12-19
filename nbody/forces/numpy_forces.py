@@ -18,7 +18,7 @@ def lenard_jones_force(r, well_depth=1, diameter=1, *args, **kwargs):
     """
     return - 12 * well_depth *  ((diameter / r) ** 11 - (diameter / r) ** 5 )
 
-def calculate_forces(r: np.ndarray, force_law = lenard_jones_force, *args, **kwargs):
+def calculate_forces(r: np.ndarray, force_law = lenard_jones_force, out=None, *args, **kwargs):
     """
 
     Parameters
@@ -46,7 +46,10 @@ def calculate_forces(r: np.ndarray, force_law = lenard_jones_force, *args, **kwa
     distances_ij[np.arange(N), np.arange(N), :] = np.inf
     directions_ij = rij / distances_ij
     forces = force_law(distances_ij, *args, **kwargs) * directions_ij
-    return forces.sum(axis=1)
+    if out is not None:
+        np.sum(forces, axis=1, out=out)
+    else:
+        return forces.sum(axis=1)
 
 def lenard_jones_potential(r1, r2, well_depth=1, diameter=1):
     r = r1 - r2

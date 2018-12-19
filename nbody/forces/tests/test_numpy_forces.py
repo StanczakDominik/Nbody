@@ -27,8 +27,6 @@ def test_lenard_jones_1d(r2, expected_force_on_1):
 
 @given(r=arrays(np.float, (2, 3), floats(allow_infinity=False, allow_nan=False)))
 def test_lenard_jones_3d_reciprocity(r):
-    print(r)
     forces = calculate_forces(r)
-
     # check reciprocity (Newton's third law)
     np.testing.assert_allclose(forces[1], -forces[0])
