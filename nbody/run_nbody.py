@@ -1,17 +1,7 @@
 from nbody.forces.numpy_forces import calculate_forces
-import h5py
 
 from nbody.initial_conditions import initialize_matrices
 from nbody.integrators import verlet_step
-import numpy as np
-
-def create_openpmd_hdf5(path):
-    f = h5py.File(path, "x")
-    f.attrs['openPMD'] = "1.1.0"
-    f.attrs.create('openPMDextension', 0, np.uint32)
-
-
-
 
 
 def save_iteration(i_iteration, hdf5_file, r, p, m, q):

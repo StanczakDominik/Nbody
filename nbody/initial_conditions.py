@@ -1,3 +1,6 @@
+import datetime
+
+import h5py
 import numpy as np
 # json_data=None
 
@@ -47,3 +50,16 @@ def initialize_particle_lattice(r, L):
             for k in range(n_side):
                 index_in_N = n_side**2 * i + n_side*j + k
                 r[index_in_N] = (i * dx, j * dy, k * dz)
+
+
+def create_openpmd_hdf5(path):
+    f = h5py.File(path, "x")
+    f.attrs['openPMD'] = "1.1.0"
+    # f.attrs.create('openPMDextension', 0, np.uint32)
+    f.attrs['openPMDextension'] = 0
+    f.attrs["basePath"] = "/data/%T/"
+    f.attrs["particlesPath"] = "particles/"
+    f.attrs["author"] = "Dominik Stańczak <stanczakdominik@gmail.com>"
+    f.attrs["software"] = "Placeholder name for NBody software https://github.com/StanczakDominik/Nbody/"
+    f.attrs["date"] = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc).strftime("%Y-%M-%d %T %z")
+    return f
