@@ -4,7 +4,22 @@ from nbody.initial_conditions import parse_L
 
 
 def verlet_step(r, p, m, forces, dt, force_calculator):
-    # Verlet algorithm - Allen page 10
+    """
+    Velocity Verlet algorithm - Allen page 10
+
+    Parameters
+    ----------
+    r :
+    p :
+    m :
+    forces :
+    dt :
+    force_calculator :
+
+    Returns
+    -------
+
+    """
     accelerate(p, forces, dt/2)
     move(r, p, m, dt)
     force_calculator(r, m = m, out = forces)

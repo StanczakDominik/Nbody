@@ -10,7 +10,6 @@ from nbody.integrators import verlet_step
 
 N = 3
 N_iterations = 50
-# dt = 1e-3
 @given(
     r=arrays(np.float,
              (N, 3),

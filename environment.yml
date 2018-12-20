@@ -6,7 +6,7 @@ dependencies:
   - numba # TODO pin versions
   - numpy
   - pytest
-  - openpmd-api
+  - h5py
   - matplotlib
   - cudatoolkit
   - click

@@ -1,9 +1,9 @@
 import numpy as np
+# json_data=None
 
-
-def initialize_matrices(N, json_data=None):
-    m = np.ones((N, 1), dtype=float)
-    q = np.ones((N, 1), dtype=float)
+def initialize_matrices(N, m=1, q=1):
+    m = np.full((N, 1), m, dtype=float)
+    q = np.full((N, 1), q, dtype=float)
     r = np.random.random((N, 3)) * 20
     p = np.random.normal(size=(N, 3))
     initialize_zero_cm_momentum(p)
