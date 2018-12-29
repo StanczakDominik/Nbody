@@ -1,4 +1,5 @@
 import datetime
+import os
 
 import h5py
 import numpy as np
@@ -53,6 +54,9 @@ def initialize_particle_lattice(r, L):
 
 
 def create_openpmd_hdf5(path):
+    dirname = os.path.dirname(path)
+    os.makedirs(dirname, exist_ok=True)
+
     f = h5py.File(path, "x")
     f.attrs['openPMD'] = "1.1.0"
     # f.attrs.create('openPMDextension', 0, np.uint32)
@@ -66,8 +70,71 @@ def create_openpmd_hdf5(path):
     f.attrs["iterationFormat"] = "/data/%T/"
     return f
 
+
 def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m, q):
+    N = r.shape[0]
+
     g = f.create_group(f.attrs["iterationFormat"].replace("%T", iteration))
     g.attrs['time'] = time
     g.attrs['dt'] = dt
-    g.attrs['timeUnitSI'] = time
+    g.attrs['timeUnitSI'] = time  # TODO decide on something
+
+    particles = g.create_group(f.attrs["particlesPath"] + "particles")
+    particles.create_dataset(
+        "id",
+        data=np.arange(N),
+        )
+
+    openPMD_positions = np.array(
+        [1] + [0]*6,
+        dtype=float)
+    openPMD_momentum = np.array(
+        [1, 1, -1, 0, 0, 0, 0,],
+        dtype=float)
+    openPMD_charge = np.array(
+        [0, 0, 1, 1, 0, 0, 0,],
+        dtype=float)
+    openPMD_mass = np.array(
+        [0, 1, 0, 0, 0, 0, 0,],
+        dtype=float)
+
+    for index, direction in enumerate("xyz"):
+        position = particles.create_dataset(
+            f"position/{direction}",
+            data = r[:,index])
+        position.attrs["unitSI"] = 1.0
+        position.attrs["unitDimension"] = openPMD_positions
+        position.attrs["timeOffset"] = 0.0
+
+        positionOffset = particles.create_dataset(
+            f"positionOffset/{direction}",
+            data = np.zeros(N))
+        positionOffset.attrs["unitSI"] = 1.0
+        positionOffset.attrs["unitDimension"] = openPMD_positions
+        positionOffset.attrs["timeOffset"] = 0.0
+
+        momentum = particles.create_dataset(
+            f"momentum/{direction}",
+            data = p[:, index])
+        momentum.attrs["unitSI"] = 1.0
+        momentum.attrs["unitDimension"] = openPMD_momentum
+        momentum.attrs["timeOffset"] = 0.0
+
+
+    charge = particles.create_dataset(
+        f"charge/{direction}",
+        data = q)
+    charge.attrs["unitSI"] = 1.0
+    charge.attrs["unitDimension"] = openPMD_charge
+    charge.attrs["timeOffset"] = 0.0
+
+
+    mass = particles.create_dataset(
+        f"mass/{direction}",
+        data = m
+        )
+    mass.attrs["unitSI"] = 1.0
+    mass.attrs["unitDimension"] = openPMD_mass
+    mass.attrs["timeOffset"] = 0.0
+
+    # TODO MAYBE particlePatches as defined by openPMD?
