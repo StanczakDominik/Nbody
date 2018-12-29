@@ -3,25 +3,24 @@ import os
 
 import h5py
 import numpy as np
-import astropy.units as u
-from astropy import constants
-# json_data=None
 
 def initialize_matrices(N,
-                        m=(39.948*u.u).si.value,
-                        # q=constants.e.si.value,
-                        q = 0,
-                        dt=1e-9):
+                        m,
+                        q,
+                        box_L,
+                        velocity_scale,
+                        ):
     m = np.full((N, 1), m, dtype=float)
     q = np.full((N, 1), q, dtype=float)
-    r = np.random.random((N, 3)) * 20
-    p = np.random.normal(scale=1e-12, size=(N, 3)) * m
+    r = np.empty((N, 3), dtype=float)
+    p = np.random.normal(scale = velocity_scale,
+                         size = (N, 3)) * m
     initialize_zero_cm_momentum(p)
-    L = parse_L(1e-6)
+    L = parse_L(box_L)
     initialize_particle_lattice(r, L)
     forces = np.empty_like(p)
     movements = np.empty_like(r)
-    return m, q, r, p, forces, movements, dt
+    return m, q, r, p, forces, movements
 
 
 def initialize_zero_cm_momentum(p):

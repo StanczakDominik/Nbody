@@ -2,7 +2,6 @@ from nbody.forces.numpy_forces import calculate_forces
 
 from nbody.initial_conditions import initialize_matrices, create_openpmd_hdf5, save_to_hdf5
 from nbody.integrators import verlet_step, kinetic_energy
-import astropy
 
 
 def save_iteration(hdf5_file, i_iteration, time, dt, r, p, m, q):
@@ -11,28 +10,37 @@ def save_iteration(hdf5_file, i_iteration, time, dt, r, p, m, q):
     f.close()
 
 
-force_params = dict(diameter= 3.405e-10,
-                    well_depth=(119.8*astropy.units.K*astropy.constants.k_B).si.value)
 def check_saving_time(i_iteration, save_every_x_iters = 10):
     return (i_iteration % save_every_x_iters) == 0
 
-def run(hdf5_file = "/mnt/hdd/data/hdf5/data{0:08d}.h5",
-        N: int = int(2**12),
-        N_iterations = int(1e5)):
-    m, q, r, p, forces, movements, dt = initialize_matrices(N)
+def run(force_params,
+        N,
+        N_iterations,
+        dt,
+        file_path,
+        q,
+        m,
+        velocity_scale,
+        box_L,
+        save_every_x_iters,
+        ):
+    m, q, r, p, forces, movements = initialize_matrices(N, m, q, box_L, velocity_scale)
 
     calculate_forces(r, out=forces, **force_params)
 
-    save_iteration(hdf5_file, 0, 0, 0, r, p, m, q)
+    save_iteration(file_path, 0, 0, 0, r, p, m, q)
 
     for i_iteration in range(N_iterations):
-        print(f"Iteration {i_iteration}, kinetic energy {kinetic_energy(p, m)}")
+        print(f"\rIteration {i_iteration}, kinetic energy {kinetic_energy(p, m)}", end="")
         verlet_step(r, p, m, forces, dt, force_calculator=calculate_forces, **force_params)
 
-        if check_saving_time(i_iteration, 100):
-            save_iteration(hdf5_file, i_iteration, i_iteration * dt, dt, r, p, m, q)
+        if check_saving_time(i_iteration, save_every_x_iters):
+            save_iteration(file_path, i_iteration, i_iteration * dt, dt, r, p, m, q)
 
-    save_iteration(hdf5_file, N_iterations, N_iterations * dt, dt, r, p, m, q)
+    save_iteration(file_path, N_iterations, N_iterations * dt, dt, r, p, m, q)
 
 if __name__ == "__main__":
-    run()
+    import json
+    with open("config.json") as f:
+        simulation_params = json.load(f)
+    run(**simulation_params)
