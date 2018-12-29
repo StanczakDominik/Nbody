@@ -4,9 +4,9 @@ from nbody.initial_conditions import initialize_matrices, create_openpmd_hdf5, s
 from nbody.integrators import verlet_step
 
 
-def save_iteration(hdf5_file, i_iteration, time, r, p, m, q):
+def save_iteration(hdf5_file, i_iteration, time, dt, r, p, m, q):
     f = create_openpmd_hdf5(hdf5_file.format(i_iteration))
-    save_to_hdf5(f, i_iteration, time, r, p, m, q)
+    save_to_hdf5(f, i_iteration, time, dt, r, p, m, q)
     f.close()
 
 
@@ -25,10 +25,9 @@ def run(hdf5_file = "/tmp/data/hdf5/data{0:08d}.h5",
         verlet_step(r, p, m, forces, dt, force_calculator=calculate_forces)
 
         if check_saving_time(i_iteration):
-            save_iteration(i_iteration, hdf5_file, r, p, m, q)
+            save_iteration(hdf5_file, i_iteration, i_iteration * dt, dt, r, p, m, q)
 
-    save_iteration(N_iterations, hdf5_file, r, p, m, q)
-    # hdf5_file.close()
-        
+    save_iteration(hdf5_file, N_iterations, N_iterations * dt, dt, r, p, m, q)
+
 if __name__ == "__main__":
     run()

@@ -1,11 +1,14 @@
 import os
+import random
+import string
 from nbody.initial_conditions import create_openpmd_hdf5
 import pytest
 N = 3
 
 @pytest.fixture()
 def openpmd_file():
-    path = "/tmp/testfile.hdf5"
+    random_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=N))
+    path = f"/tmp/testfile{random_id}.hdf5"
     f = create_openpmd_hdf5(path)
     yield path, f
     f.close()
@@ -13,5 +16,5 @@ def openpmd_file():
 
 def test_openpmd_file(openpmd_file):
     path, f = openpmd_file
-    print(f.attrs)
+    return f.attrs
 

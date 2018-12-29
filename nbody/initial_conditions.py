@@ -61,20 +61,20 @@ def create_openpmd_hdf5(path):
     f.attrs['openPMD'] = "1.1.0"
     # f.attrs.create('openPMDextension', 0, np.uint32)
     f.attrs['openPMDextension'] = 0
-    f.attrs["basePath"] = "/data/%T/"
+    f.attrs["basePath"] = "/data/{}/"
     f.attrs["particlesPath"] = "particles/"
     f.attrs["author"] = "Dominik Stańczak <stanczakdominik@gmail.com>"
     f.attrs["software"] = "Placeholder name for NBody software https://github.com/StanczakDominik/Nbody/"
     f.attrs["date"] = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc).strftime("%Y-%M-%d %T %z")
     f.attrs["iterationEncoding"] = "groupBased"
-    f.attrs["iterationFormat"] = "/data/%T/"
+    f.attrs["iterationFormat"] = "/data/{}/"
     return f
 
 
 def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m, q):
     N = r.shape[0]
 
-    g = f.create_group(f.attrs["iterationFormat"].replace("%T", iteration))
+    g = f.create_group(f.attrs["iterationFormat"].format(iteration))
     g.attrs['time'] = time
     g.attrs['dt'] = dt
     g.attrs['timeUnitSI'] = time  # TODO decide on something
