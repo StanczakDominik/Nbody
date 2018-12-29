@@ -14,9 +14,8 @@ def check_saving_time(i_iteration, save_every_x_iters = 10):
     return (i_iteration % save_every_x_iters) == 0
 
 def run(hdf5_file = "/tmp/data/hdf5/data{0:08d}.h5",
-        N: int = int(2**6),
-        N_iterations = 100):
-    # TODO use OpenPMD for saving instead of hdf5?
+        N: int = int(2**12),
+        N_iterations = int(1e6)):
     m, q, r, p, forces, movements, dt = initialize_matrices(N)
 
     calculate_forces(r, out=forces)
