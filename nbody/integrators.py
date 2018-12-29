@@ -3,7 +3,7 @@ import numpy as np
 from nbody.initial_conditions import parse_L
 
 
-def verlet_step(r, p, m, forces, dt, force_calculator):
+def verlet_step(r, p, m, forces, dt, force_calculator, *args, **kwargs):
     """
     Velocity Verlet algorithm - Allen page 10
 
@@ -22,7 +22,7 @@ def verlet_step(r, p, m, forces, dt, force_calculator):
     """
     accelerate(p, forces, dt/2)
     move(r, p, m, dt)
-    force_calculator(r, m = m, out = forces)
+    force_calculator(r, m = m, out = forces, *args, **kwargs)
     accelerate(p, forces, dt/2)
 
 
