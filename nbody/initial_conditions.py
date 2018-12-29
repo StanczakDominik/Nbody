@@ -15,9 +15,9 @@ def initialize_matrices(N,
     m = np.full((N, 1), m, dtype=float)
     q = np.full((N, 1), q, dtype=float)
     r = np.random.random((N, 3)) * 20
-    p = np.random.normal(size=(N, 3))
+    p = np.random.normal(scale=1e-12, size=(N, 3)) * m
     initialize_zero_cm_momentum(p)
-    L = parse_L(5)
+    L = parse_L(1e-6)
     initialize_particle_lattice(r, L)
     forces = np.empty_like(p)
     movements = np.empty_like(r)
@@ -32,7 +32,7 @@ def initialize_zero_cm_momentum(p):
 def parse_L(L):
     if isinstance(L, np.ndarray):
         return L
-    elif type(L) == int:
+    elif type(L) == int or type(L) == float:
         return np.array(3*[L])
     elif len(L) == 3:
         return np.array(L)

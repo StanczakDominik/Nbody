@@ -35,3 +35,7 @@ def move(r: np.array, p: np.array, m: np.array, dt: float, boundary_conditions: 
     if boundary_conditions == "periodic":
         L = parse_L(L)
         r %= L
+
+
+def kinetic_energy(p, m):
+    return np.sum(p**2/m)/2
