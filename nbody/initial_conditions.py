@@ -1,5 +1,7 @@
 import datetime
 import os
+import json
+import time
 
 import h5py
 import numpy as np
@@ -57,11 +59,14 @@ def initialize_particle_lattice(r, L):
                 r[index_in_N] = (i * dx, j * dy, k * dz)
 
 
-def create_openpmd_hdf5(path):
+def create_openpmd_hdf5(path, start_parameters = None):
     dirname = os.path.dirname(path)
     os.makedirs(dirname, exist_ok=True)
 
     f = h5py.File(path, "w")
+    f.attrs["process_time"] = time.process_time()
+    f.attrs["time"] = time.time()
+
     f.attrs['openPMD'] = b"1.1.0"
     # f.attrs.create('openPMDextension', 0, np.uint32)
     f.attrs['openPMDextension'] = 0
@@ -74,6 +79,8 @@ def create_openpmd_hdf5(path):
     # f.attrs["iterationFormat"] = "/data/{}/"
     f.attrs["iterationEncoding"] = "fileBased"
     f.attrs["iterationFormat"] = "/data/{}/"
+    if start_parameters is not None:
+        f.attrs["startParameters"] = json.dumps(start_parameters)
     return f
 
 
