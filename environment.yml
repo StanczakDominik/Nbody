@@ -11,3 +11,4 @@ dependencies:
   - cudatoolkit
   - click
   - hypothesis
+  - tqdm

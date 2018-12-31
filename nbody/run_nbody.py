@@ -1,3 +1,5 @@
+from tqdm import trange
+
 from nbody.forces.numpy_forces import calculate_forces
 
 from nbody.initial_conditions import initialize_matrices, create_openpmd_hdf5, save_to_hdf5
@@ -44,12 +46,13 @@ def run(force_params,
 
     save_iteration(file_path, 0, 0, 0, r, p, m, q, start_parameters)
 
-    for i_iteration in range(N_iterations):
-        print(f"\rIteration {i_iteration}, kinetic energy {kinetic_energy(p, m)}", end="")
-        verlet_step(r, p, m, forces, dt, force_calculator=calculate_forces, **force_params)
+    with trange(N_iterations) as t:
+        for i in t:
+            t.set_postfix(kinetic_energy=kinetic_energy(p, m))
+            verlet_step(r, p, m, forces, dt, force_calculator=calculate_forces, **force_params)
 
-        if check_saving_time(i_iteration, save_every_x_iters):
-            save_iteration(file_path, i_iteration, i_iteration * dt, dt, r, p, m, q, start_parameters)
+            if check_saving_time(i, save_every_x_iters):
+                save_iteration(file_path, i, i * dt, dt, r, p, m, q, start_parameters)
 
     save_iteration(file_path, N_iterations, N_iterations * dt, dt, r, p, m, q, start_parameters)
 
