@@ -1,4 +1,4 @@
-name: nbody3.6
+name: nbody
 channels:
 - conda-forge
 dependencies:
