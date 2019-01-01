@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def lenard_jones_force(r, well_depth=1, diameter=1, *args, **kwargs):
     """
 
@@ -16,9 +17,12 @@ def lenard_jones_force(r, well_depth=1, diameter=1, *args, **kwargs):
     -------
 
     """
-    return - 12 * well_depth *  ((diameter / r) ** 11 - (diameter / r) ** 5 )
+    return -12 * well_depth * ((diameter / r) ** 11 - (diameter / r) ** 5)
 
-def calculate_forces(r: np.ndarray, force_law = lenard_jones_force, out=None, *args, **kwargs):
+
+def calculate_forces(
+    r: np.ndarray, force_law=lenard_jones_force, out=None, *args, **kwargs
+):
     """
 
     Parameters
@@ -54,8 +58,8 @@ def calculate_forces(r: np.ndarray, force_law = lenard_jones_force, out=None, *a
     else:
         return forces.sum(axis=1)
 
+
 def lenard_jones_potential(r1, r2, well_depth=1, diameter=1):
     r = r1 - r2
     norm_r = np.linalg.norm(r)
-    return 4 * well_depth * ((diameter / norm_r) ** 12 - (diameter / norm_r) ** 6 )
-
+    return 4 * well_depth * ((diameter / norm_r) ** 12 - (diameter / norm_r) ** 6)

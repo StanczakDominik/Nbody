@@ -20,17 +20,24 @@ def verlet_step(r, p, m, forces, dt, force_calculator, *args, **kwargs):
     -------
 
     """
-    accelerate(p, forces, dt/2)
+    accelerate(p, forces, dt / 2)
     move(r, p, m, dt)
-    force_calculator(r, m = m, out = forces, *args, **kwargs)
-    accelerate(p, forces, dt/2)
+    force_calculator(r, m=m, out=forces, *args, **kwargs)
+    accelerate(p, forces, dt / 2)
 
 
 def accelerate(p: np.array, forces: np.array, dt: float):
     p += dt * forces
 
 
-def move(r: np.array, p: np.array, m: np.array, dt: float, boundary_conditions: bool = None, L = None):
+def move(
+    r: np.array,
+    p: np.array,
+    m: np.array,
+    dt: float,
+    boundary_conditions: bool = None,
+    L=None,
+):
     r += dt * p / m
     if boundary_conditions == "periodic":
         L = parse_L(L)
@@ -38,4 +45,4 @@ def move(r: np.array, p: np.array, m: np.array, dt: float, boundary_conditions: 
 
 
 def kinetic_energy(p, m):
-    return np.sum(p**2/m)/2
+    return np.sum(p ** 2 / m) / 2

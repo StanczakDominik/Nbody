@@ -10,21 +10,21 @@ from nbody.integrators import verlet_step, kinetic_energy
 N = 6
 N_iterations = 50
 
+
 @given(
     random=random_module(),
-    v=arrays(float,
-             (N, 3),
-             floats(min_value = -1e1,
-                    max_value = 1e1,
-                    allow_infinity=False,
-                    allow_nan=False)),
-    )
+    v=arrays(
+        float,
+        (N, 3),
+        floats(min_value=-1e1, max_value=1e1, allow_infinity=False, allow_nan=False),
+    ),
+)
 def test_verlet_integrator_reversible(random, v):
     dt = 1e-6
     r = np.random.random(size=v.shape) * 2
     m = np.ones((r.shape[0], 1), dtype=float)
     p = m * v
-    forces = calculate_forces(r, m = m)
+    forces = calculate_forces(r, m=m)
     r_init = r.copy()
     p_init = p.copy()
     kinetic_init = kinetic_energy(p_init, m)
@@ -39,4 +39,3 @@ def test_verlet_integrator_reversible(random, v):
     np.testing.assert_allclose(p, p_init, atol=1e-8)
     kinetic_final = kinetic_energy(p, m)
     np.testing.assert_allclose(kinetic_init, kinetic_final, atol=1e-8)
-
