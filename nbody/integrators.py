@@ -45,4 +45,4 @@ def move(
 
 
 def kinetic_energy(p, m):
-    return np.sum(p ** 2 / m) / 2
+    return (p ** 2 / m).sum() / 2.0

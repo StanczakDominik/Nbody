@@ -5,18 +5,24 @@ import time
 
 import h5py
 import numpy as np
+import cupy as cp
+import math
 
 
-def initialize_matrices(N, m, q, box_L, velocity_scale):
-    m = np.full((N, 1), m, dtype=float)
-    q = np.full((N, 1), q, dtype=float)
-    r = np.empty((N, 3), dtype=float)
-    p = np.random.normal(scale=velocity_scale, size=(N, 3)) * m
+def initialize_matrices(N, m, q, box_L, velocity_scale, gpu=False):
+    if gpu:
+        xp = cp
+    else:
+        xp = np
+    m = xp.full((N, 1), m, dtype=float)
+    q = xp.full((N, 1), q, dtype=float)
+    r = xp.empty((N, 3), dtype=float)
+    p = xp.random.normal(scale=velocity_scale, size=(N, 3)) * m
     initialize_zero_cm_momentum(p)
     L = parse_L(box_L)
     initialize_particle_lattice(r, L)
-    forces = np.empty_like(p)
-    movements = np.empty_like(r)
+    forces = xp.empty_like(p)
+    movements = xp.empty_like(r)
     return m, q, r, p, forces, movements
 
 
@@ -37,11 +43,12 @@ def parse_L(L):
 
 
 def initialize_particle_lattice(r, L):
+    xp = cp.get_array_module(r)
     N = r.shape[0]
     # assume N is a cube of a natural number
     Lx, Ly, Lz = parse_L(L)
 
-    n_side = int(np.round(N ** (1 / 3)))
+    n_side = int(np.round(N ** (1 / 3)))  # np is not a bug here
     if n_side ** 3 != N:
         raise ValueError(
             f"Cubic lattice supports only N ({N}) being cubes (not {n_side}^3) right now!"
@@ -53,7 +60,7 @@ def initialize_particle_lattice(r, L):
         for j in range(n_side):
             for k in range(n_side):
                 index_in_N = n_side ** 2 * i + n_side * j + k
-                r[index_in_N] = (i * dx, j * dy, k * dz)
+                r[index_in_N] = xp.array((i * dx, j * dy, k * dz))
 
 
 def create_openpmd_hdf5(path, start_parameters=None):
@@ -105,29 +112,33 @@ def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m, q):
     openPMD_mass = np.array([0, 1, 0, 0, 0, 0, 0], dtype=float)
 
     for index, direction in enumerate("xyz"):
-        position = particles.create_dataset(f"position/{direction}", data=r[:, index])
+        position = particles.create_dataset(
+            f"position/{direction}", data=cp.asnumpy(r[:, index])
+        )
         position.attrs["unitSI"] = 1.0
         position.attrs["unitDimension"] = openPMD_positions
         position.attrs["timeOffset"] = 0.0
 
         positionOffset = particles.create_dataset(
-            f"positionOffset/{direction}", data=np.zeros(N)
+            f"positionOffset/{direction}", data=cp.asnumpy(np.zeros(N))
         )
         positionOffset.attrs["unitSI"] = 1.0
         positionOffset.attrs["unitDimension"] = openPMD_positions
         positionOffset.attrs["timeOffset"] = 0.0
 
-        momentum = particles.create_dataset(f"momentum/{direction}", data=p[:, index])
+        momentum = particles.create_dataset(
+            f"momentum/{direction}", data=cp.asnumpy(p[:, index])
+        )
         momentum.attrs["unitSI"] = 1.0
         momentum.attrs["unitDimension"] = openPMD_momentum
         momentum.attrs["timeOffset"] = 0.0
 
-    charge = particles.create_dataset("charge", data=q[:, 0])
+    charge = particles.create_dataset("charge", data=cp.asnumpy(q[:, 0]))
     charge.attrs["unitSI"] = 1.0
     charge.attrs["unitDimension"] = openPMD_charge
     charge.attrs["timeOffset"] = 0.0
 
-    mass = particles.create_dataset("mass", data=m[:, 0])
+    mass = particles.create_dataset("mass", data=cp.asnumpy(m[:, 0]))
     mass.attrs["unitSI"] = 1.0
     mass.attrs["unitDimension"] = openPMD_mass
     mass.attrs["timeOffset"] = 0.0

@@ -1,3 +1,4 @@
+import cupy
 import numpy as np
 
 
@@ -51,14 +52,15 @@ def calculate_forces(
 
     """
     # TODO optimize with upper triangular matrix
+    xp = cupy.get_array_module(r)
     N = r.shape[0]
     rij = r.reshape(N, 1, 3) - r.reshape(1, N, 3)
-    distances_ij = np.sqrt(np.sum(rij ** 2, axis=2, keepdims=True))
-    distances_ij[np.arange(N), np.arange(N), :] = np.inf
+    distances_ij = xp.sqrt(xp.sum(rij ** 2, axis=2, keepdims=True))
+    distances_ij[xp.arange(N), xp.arange(N), :] = xp.inf
     directions_ij = rij / distances_ij
     forces = force_law(distances_ij, *args, **kwargs) * directions_ij
     if out is not None:
-        np.sum(forces, axis=1, out=out)
+        xp.sum(forces, axis=1, out=out)
     else:
         return forces.sum(axis=1)
 
@@ -90,9 +92,10 @@ def calculate_potentials(
 
     """
     # TODO optimize with upper triangular matrix
+    xp = cupy.get_array_module(r)
     N = r.shape[0]
     rij = r.reshape(N, 1, 3) - r.reshape(1, N, 3)
-    distances_ij = np.sqrt(np.sum(rij ** 2, axis=2, keepdims=True))
-    distances_ij[np.arange(N), np.arange(N), :] = np.inf
+    distances_ij = xp.sqrt(xp.sum(rij ** 2, axis=2, keepdims=True))
+    distances_ij[xp.arange(N), xp.arange(N), :] = xp.inf
     potentials = potential_law(distances_ij, *args, **kwargs)
     return potentials.sum() / 2

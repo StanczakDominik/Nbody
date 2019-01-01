@@ -48,7 +48,9 @@ def run(
         save_every_x_iters=save_every_x_iters,
     )
 
-    m, q, r, p, forces, movements = initialize_matrices(N, m, q, box_L, velocity_scale)
+    m, q, r, p, forces, movements = initialize_matrices(
+        N, m, q, box_L, velocity_scale, gpu=True
+    )
 
     calculate_forces(r, out=forces, **force_params)
 
