@@ -1,3 +1,6 @@
+import json
+import click
+
 from tqdm import trange
 
 from nbody.forces.numpy_forces import calculate_forces
@@ -56,8 +59,16 @@ def run(force_params,
 
     save_iteration(file_path, N_iterations, N_iterations * dt, dt, r, p, m, q, start_parameters)
 
-if __name__ == "__main__":
-    import json
-    with open("config.json") as f:
+@click.command()
+@click.option("--config", default="config.json", help="Config")
+def main(config="config.json"):
+    with open(config) as f:
         simulation_params = json.load(f)
     run(**simulation_params)
+
+
+
+
+if __name__ == '__main__':
+    main()
+
