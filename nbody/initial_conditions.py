@@ -5,7 +5,6 @@ import time
 
 import h5py
 import numpy as np
-import cupy as cp
 import math
 import git
 
@@ -24,20 +23,34 @@ def get_git_information():
 
 
 def initialize_matrices(N, m, q, box_L, velocity_scale, gpu=False):
-    if gpu:
-        xp = cp
-    else:
-        xp = np
-    m = xp.full((N, 1), m, dtype=float)
-    q = xp.full((N, 1), q, dtype=float)
-    r = xp.empty((N, 3), dtype=float)
-    p = xp.random.normal(scale=velocity_scale, size=(N, 3)) * m
+    # initialized on
+    m = np.full((N, 1), m, dtype=float)
+    q = np.full((N, 1), q, dtype=float)
+    r = np.empty((N, 3), dtype=float)
+    p = np.random.normal(scale=velocity_scale, size=(N, 3)) * m
     initialize_zero_cm_momentum(p)
     L = parse_L(box_L)
     initialize_particle_lattice(r, L)
-    forces = xp.empty_like(p)
-    movements = xp.empty_like(r)
-    return m, q, r, p, forces, movements
+    forces = cp.empty_like(p)
+    movements = cp.empty_like(r)
+    if gpu:
+        import cupy as cp
+
+        m_gpu = cp.asarray(m)
+        q_gpu = cp.asarray(q)
+        r_gpu = cp.asarray(r)
+        p_gpu = cp.asarray(p)
+        forces_gpu = cp.asarray(forces)
+        movements_gpu = cp.asarray(movements)
+        del m
+        del q
+        del r
+        del p
+        del forces
+        del movements
+        return m_gpu, q_gpu, r_gpu, p_gpu, forces_gpu, movements_gpu
+    else:
+        return m, q, r, p, forces, movements
 
 
 def initialize_zero_cm_momentum(p):
@@ -111,6 +124,15 @@ def create_openpmd_hdf5(path, start_parameters=None):
     return f
 
 
+try:
+    import cupy
+
+    return cupy.asnumpy(array)
+    to_numpy = cupy.asnumpy
+except ImportError:
+    to_numpy = lambda x: x
+
+
 def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m, q):
     # TODO use OpenPMD for saving instead of hdf5?
     N = r.shape[0]
@@ -129,32 +151,32 @@ def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m, q):
 
     for index, direction in enumerate("xyz"):
         position = particles.create_dataset(
-            f"position/{direction}", data=cp.asnumpy(r[:, index])
+            f"position/{direction}", data=to_numpy(r[:, index])
         )
         position.attrs["unitSI"] = 1.0
         position.attrs["unitDimension"] = openPMD_positions
         position.attrs["timeOffset"] = 0.0
 
         positionOffset = particles.create_dataset(
-            f"positionOffset/{direction}", data=cp.asnumpy(np.zeros(N))
+            f"positionOffset/{direction}", data=to_numpy(np.zeros(N))
         )
         positionOffset.attrs["unitSI"] = 1.0
         positionOffset.attrs["unitDimension"] = openPMD_positions
         positionOffset.attrs["timeOffset"] = 0.0
 
         momentum = particles.create_dataset(
-            f"momentum/{direction}", data=cp.asnumpy(p[:, index])
+            f"momentum/{direction}", data=to_numpy(p[:, index])
         )
         momentum.attrs["unitSI"] = 1.0
         momentum.attrs["unitDimension"] = openPMD_momentum
         momentum.attrs["timeOffset"] = 0.0
 
-    charge = particles.create_dataset("charge", data=cp.asnumpy(q[:, 0]))
+    charge = particles.create_dataset("charge", data=to_numpy(q[:, 0]))
     charge.attrs["unitSI"] = 1.0
     charge.attrs["unitDimension"] = openPMD_charge
     charge.attrs["timeOffset"] = 0.0
 
-    mass = particles.create_dataset("mass", data=cp.asnumpy(m[:, 0]))
+    mass = particles.create_dataset("mass", data=to_numpy(m[:, 0]))
     mass.attrs["unitSI"] = 1.0
     mass.attrs["unitDimension"] = openPMD_mass
     mass.attrs["timeOffset"] = 0.0

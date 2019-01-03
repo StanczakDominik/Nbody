@@ -1,5 +1,11 @@
-import cupy
 import numpy as np
+
+try:
+    import cupy
+
+    get_array_module = lambda *args, **kwargs: cupy.get_array_module(*args, **kwargs)
+except ImportError:
+    get_array_module = lambda *args, **kwargs: np
 
 
 def lenard_jones_force(r, well_depth=1, diameter=1, *args, **kwargs):
@@ -52,7 +58,7 @@ def calculate_forces(
 
     """
     # TODO optimize with upper triangular matrix
-    xp = cupy.get_array_module(r)
+    xp = get_array_module(r)
     N = r.shape[0]
     rij = r.reshape(N, 1, 3) - r.reshape(1, N, 3)
     distances_ij = xp.sqrt(xp.sum(rij ** 2, axis=2, keepdims=True))
@@ -92,7 +98,7 @@ def calculate_potentials(
 
     """
     # TODO optimize with upper triangular matrix
-    xp = cupy.get_array_module(r)
+    xp = get_array_module(r)
     N = r.shape[0]
     rij = r.reshape(N, 1, 3) - r.reshape(1, N, 3)
     distances_ij = xp.sqrt(xp.sum(rij ** 2, axis=2, keepdims=True))
