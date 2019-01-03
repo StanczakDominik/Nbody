@@ -1,6 +1,7 @@
 import json
-import click
+import os
 
+import click
 from tqdm import trange
 
 from nbody.forces.numpy_forces import calculate_forces
@@ -14,9 +15,11 @@ from nbody.integrators import verlet_step, kinetic_energy
 
 
 def save_iteration(hdf5_file, i_iteration, time, dt, r, p, m, q, start_parameters=None):
-    f = create_openpmd_hdf5(hdf5_file.format(i_iteration), start_parameters)
+    path = hdf5_file.format(i_iteration)
+    f = create_openpmd_hdf5(path, start_parameters)
     save_to_hdf5(f, i_iteration, time, dt, r, p, m, q)
     f.close()
+    return path
 
 
 def check_saving_time(i_iteration, save_every_x_iters=10):
@@ -66,9 +69,10 @@ def run(
             if check_saving_time(i, save_every_x_iters):
                 save_iteration(file_path, i, i * dt, dt, r, p, m, q, start_parameters)
 
-    save_iteration(
+    path = save_iteration(
         file_path, N_iterations, N_iterations * dt, dt, r, p, m, q, start_parameters
     )
+    print(f"Saved to {os.path.dirname(path)}!")
 
 
 @click.command()

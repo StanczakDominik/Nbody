@@ -7,6 +7,20 @@ import h5py
 import numpy as np
 import cupy as cp
 import math
+import git
+
+
+def get_git_information():
+    path = os.path.dirname(os.path.dirname(__file__))
+    repo = git.Repo(path)
+    branch = repo.active_branch.name
+    head = repo.head
+    diff = repo.git.diff(head)
+    short_sha = repo.git.rev_parse(repo.head.object.hexsha, short=8)
+    summary = head.commit.summary
+    is_dirty = "(Dirty)" if repo.is_dirty() else ""
+    repo_state = f"{short_sha} ({summary}) branch {branch} {is_dirty}"
+    return repo_state, diff
 
 
 def initialize_matrices(N, m, q, box_L, velocity_scale, gpu=False):
@@ -92,6 +106,8 @@ def create_openpmd_hdf5(path, start_parameters=None):
     f.attrs["iterationFormat"] = "/data/{}/"
     if start_parameters is not None:
         f.attrs["startParameters"] = json.dumps(start_parameters)
+
+    f.attrs["git_state"], f.attrs["git_diff"] = get_git_information()
     return f
 
 

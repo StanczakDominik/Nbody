@@ -16,3 +16,4 @@ dependencies:
   - tqdm
   - pip:
     - black
+    - gitpython

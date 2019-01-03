@@ -4,12 +4,12 @@
   "well_depth": 1.6540169269599997e-21
  },
  "N": 4096,
- "file_path": "/mnt/hdd/data/gpu_run/data{0:08d}.h5",
- "N_iterations": 10000,
+ "file_path": "/mnt/hdd/data/gpu_run_debug/data{0:08d}.h5",
+ "N_iterations": 100,
  "dt": 1e-09,
  "q": 0,
  "m": 6.633521356992e-26,
  "velocity_scale": 1e-8,
  "box_L": 1e-07,
- "save_every_x_iters": 100
+ "save_every_x_iters": 10
 }
