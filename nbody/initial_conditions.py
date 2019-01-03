@@ -127,7 +127,6 @@ def create_openpmd_hdf5(path, start_parameters=None):
 try:
     import cupy
 
-    return cupy.asnumpy(array)
     to_numpy = cupy.asnumpy
 except ImportError:
     to_numpy = lambda x: x
