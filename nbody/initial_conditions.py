@@ -8,6 +8,15 @@ import numpy as np
 import math
 import git
 
+try:
+    import cupy
+
+    to_numpy = cupy.asnumpy
+    get_array_module = lambda *args, **kwargs: cupy.get_array_module(*args, **kwargs)
+except ImportError:
+    to_numpy = lambda x: x
+    get_array_module = lambda *args, **kwargs: np
+
 
 def get_git_information():
     path = os.path.dirname(os.path.dirname(__file__))
@@ -31,8 +40,8 @@ def initialize_matrices(N, m, q, box_L, velocity_scale, gpu=False):
     initialize_zero_cm_momentum(p)
     L = parse_L(box_L)
     initialize_particle_lattice(r, L)
-    forces = cp.empty_like(p)
-    movements = cp.empty_like(r)
+    forces = np.empty_like(p)
+    movements = np.empty_like(r)
     if gpu:
         import cupy as cp
 
@@ -70,7 +79,7 @@ def parse_L(L):
 
 
 def initialize_particle_lattice(r, L):
-    xp = cp.get_array_module(r)
+    xp = get_array_module(r)
     N = r.shape[0]
     # assume N is a cube of a natural number
     Lx, Ly, Lz = parse_L(L)
@@ -122,14 +131,6 @@ def create_openpmd_hdf5(path, start_parameters=None):
 
     f.attrs["git_state"], f.attrs["git_diff"] = get_git_information()
     return f
-
-
-try:
-    import cupy
-
-    to_numpy = cupy.asnumpy
-except ImportError:
-    to_numpy = lambda x: x
 
 
 def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m, q):
