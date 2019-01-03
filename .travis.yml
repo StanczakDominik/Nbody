@@ -14,7 +14,7 @@ install:
 
   # Replace dep1 dep2 ... with your dependencies
   - pip install codecov
-  - conda env create -f environment.yml
+  - conda env create -q -f environment.yml
   - source activate nbody
   - python setup.py install
 
