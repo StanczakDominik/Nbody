@@ -10,7 +10,7 @@ simulation_params = {
     "dt": 1e-09,
     "q": 0,
     "m": 6.633_521_356_992e-26,
-    "velocity_scale": 1e-8,
+    "T": 273,
     "box_L": 1e-07,
     "save_every_x_iters": 10,
 }

@@ -8,6 +8,8 @@ import numpy as np
 import math
 import git
 
+k_B = 1.380_648_52e-23
+
 try:
     import cupy
 
@@ -31,12 +33,16 @@ def get_git_information():
     return repo_state, diff
 
 
-def initialize_matrices(N, m, q, box_L, velocity_scale, gpu=False):
+def maxwellian_momenta(T, m, k_B=k_B):
+    return np.random.normal(scale=np.sqrt(k_B * T / m), size=(m.size, 3)) * m
+
+
+def initialize_matrices(N, m, q, box_L, T, gpu=False):
     # initialized on
     m = np.full((N, 1), m, dtype=float)
     q = np.full((N, 1), q, dtype=float)
     r = np.empty((N, 3), dtype=float)
-    p = np.random.normal(scale=velocity_scale, size=(N, 3)) * m
+    p = maxwellian_momenta(T, m)
     initialize_zero_cm_momentum(p)
     L = parse_L(box_L)
     initialize_particle_lattice(r, L)
