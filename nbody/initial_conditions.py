@@ -21,16 +21,19 @@ except ImportError:
 
 
 def get_git_information():
-    path = os.path.dirname(os.path.dirname(__file__))
-    repo = git.Repo(path)
-    branch = repo.active_branch.name
-    head = repo.head
-    diff = repo.git.diff(head)
-    short_sha = repo.git.rev_parse(repo.head.object.hexsha, short=8)
-    summary = head.commit.summary
-    is_dirty = "(Dirty)" if repo.is_dirty() else ""
-    repo_state = f"{short_sha} ({summary}) branch {branch} {is_dirty}"
-    return repo_state, diff
+    if "TRAVIS" not in os.environ:
+        path = os.path.dirname(os.path.dirname(__file__))
+        repo = git.Repo(path)
+        branch = repo.active_branch.name
+        head = repo.head
+        diff = repo.git.diff(head)
+        short_sha = repo.git.rev_parse(repo.head.object.hexsha, short=8)
+        summary = head.commit.summary
+        is_dirty = "(Dirty)" if repo.is_dirty() else ""
+        repo_state = f"{short_sha} ({summary}) branch {branch} {is_dirty}"
+        return repo_state, diff
+    else:
+        return "CI RUN", ""
 
 
 def maxwellian_momenta(T, m, k_B=k_B):
