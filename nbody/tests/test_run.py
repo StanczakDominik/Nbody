@@ -13,10 +13,15 @@ simulation_params = {
     "T": 273,
     "box_L": 1e-07,
     "save_every_x_iters": 10,
+    "gpu": True,
 }
 
 
 def test_run():
+    try:
+        import cupy
+    except ImportError:
+        simulation_params["gpu"] = False
     run(**simulation_params)
     # this test does absolutely nothing now
     shutil.rmtree(os.path.dirname(simulation_params["file_path"]))

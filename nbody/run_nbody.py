@@ -27,7 +27,17 @@ def check_saving_time(i_iteration, save_every_x_iters=10):
 
 
 def run(
-    force_params, N, N_iterations, dt, file_path, q, m, T, box_L, save_every_x_iters
+    force_params,
+    N,
+    N_iterations,
+    dt,
+    file_path,
+    q,
+    m,
+    T,
+    box_L,
+    save_every_x_iters,
+    gpu,
 ):
     start_parameters = dict(
         force_params=force_params,
@@ -42,7 +52,7 @@ def run(
         save_every_x_iters=save_every_x_iters,
     )
 
-    m, q, r, p, forces, movements = initialize_matrices(N, m, q, box_L, T, gpu=True)
+    m, q, r, p, forces, movements = initialize_matrices(N, m, q, box_L, T, gpu=gpu)
 
     calculate_forces(r, out=forces, **force_params)
 
