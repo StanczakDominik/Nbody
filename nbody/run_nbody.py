@@ -62,15 +62,35 @@ def run(
 
     with trange(N_iterations) as t:
         for i in t:
-            verlet_step(
-                r, p, m, forces, dt, force_calculator=calculate_forces, **force_params
-            )
+            try:
+                verlet_step(
+                    r,
+                    p,
+                    m,
+                    forces,
+                    dt,
+                    force_calculator=calculate_forces,
+                    **force_params,
+                )
 
-            if check_saving_time(i, save_every_x_iters):
-                current_diagnostics = get_all_diagnostics(r, p, m, force_params)
-                diagnostic_values[i] = current_diagnostics
-                t.set_postfix(**current_diagnostics)
-                save_iteration(file_path, i, i * dt, dt, r, p, m, q, start_parameters)
+                if check_saving_time(i, save_every_x_iters):
+                    current_diagnostics = get_all_diagnostics(r, p, m, force_params)
+                    diagnostic_values[i] = current_diagnostics
+                    t.set_postfix(**current_diagnostics)
+                    save_iteration(
+                        file_path, i, i * dt, dt, r, p, m, q, start_parameters
+                    )
+            except KeyboardInterrupt as e:
+                print("Simulation interrupted! Saving...")
+                path = save_iteration(
+                    file_path, i, i * dt, dt, r, p, m, q, start_parameters
+                )
+                json_path = os.path.join(
+                    os.path.dirname(path), "diagnostic_results.json"
+                )
+                with open(json_path, "w") as f:
+                    json.dump(diagnostic_values, f)
+                raise Exception("Simulation interrupted!") from e
 
     path = save_iteration(
         file_path, N_iterations, N_iterations * dt, dt, r, p, m, q, start_parameters
