@@ -8,7 +8,7 @@ import numpy as np
 import math
 import git
 
-k_B = 1.380_648_52e-23
+from nbody.constants import k_B
 
 try:
     import cupy

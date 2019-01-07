@@ -4,6 +4,7 @@ channels:
 dependencies:
   - python=3.6
   - numba # TODO pin versions
+  - astropy
   - cupy
   - numpy
   - pytest

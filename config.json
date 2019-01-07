@@ -3,14 +3,14 @@
   "diameter": 3.405e-10,
   "well_depth": 1.6540169269599997e-21
  },
- "N": 4096,
- "file_path": "/mnt/hdd/data/gpu_run_debug/data{0:08d}.h5",
- "N_iterations": 100,
+ "N": 512,
+ "file_path": "/mnt/hdd/data/gpu_run_debug2/data{0:08d}.h5",
+ "N_iterations": 100000,
  "dt": 1e-09,
  "q": 0,
  "m": 6.633521356992e-26,
  "T": 273,
  "box_L": 1e-07,
- "save_every_x_iters": 10,
- "gpu": True
+ "save_every_x_iters": 100,
+ "gpu": true
 }
