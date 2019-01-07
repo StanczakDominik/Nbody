@@ -11,7 +11,8 @@ from nbody.initial_conditions import (
     create_openpmd_hdf5,
     save_to_hdf5,
 )
-from nbody.integrators import verlet_step, kinetic_energy
+from nbody.integrators import verlet_step
+from nbody.diagnostics import get_all_diagnostics
 
 
 def save_iteration(hdf5_file, i_iteration, time, dt, r, p, m, q, start_parameters=None):
@@ -57,21 +58,29 @@ def run(
     calculate_forces(r, out=forces, **force_params)
 
     save_iteration(file_path, 0, 0, 0, r, p, m, q, start_parameters)
+    diagnostic_values = {}
 
     with trange(N_iterations) as t:
         for i in t:
-            t.set_postfix(kinetic_energy=kinetic_energy(p, m))
             verlet_step(
                 r, p, m, forces, dt, force_calculator=calculate_forces, **force_params
             )
 
             if check_saving_time(i, save_every_x_iters):
+                current_diagnostics = get_all_diagnostics(r, p, m, force_params)
+                diagnostic_values[i] = current_diagnostics
+                t.set_postfix(**current_diagnostics)
                 save_iteration(file_path, i, i * dt, dt, r, p, m, q, start_parameters)
 
     path = save_iteration(
         file_path, N_iterations, N_iterations * dt, dt, r, p, m, q, start_parameters
     )
     print(f"Saved to {os.path.dirname(path)}!")
+
+    json_path = os.path.join(os.path.dirname(path), "diagnostic_results.json")
+    with open(json_path, "w") as f:
+        json.dump(diagnostic_values, f)
+    return diagnostic_values
 
 
 @click.command()

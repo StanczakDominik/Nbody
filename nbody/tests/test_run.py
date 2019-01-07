@@ -1,5 +1,6 @@
 import shutil
 import os
+import pytest
 from nbody.run_nbody import run
 
 simulation_params = {
@@ -13,15 +14,33 @@ simulation_params = {
     "T": 273,
     "box_L": 1e-07,
     "save_every_x_iters": 10,
-    "gpu": True,
+    "gpu": False,
 }
 
 
 def test_run():
-    try:
-        import cupy
-    except ImportError:
-        simulation_params["gpu"] = False
     run(**simulation_params)
     # this test does absolutely nothing now
     shutil.rmtree(os.path.dirname(simulation_params["file_path"]))
+
+
+gpu_simulation_params = {
+    "force_params": {"diameter": 3.405e-10, "well_depth": 1.654_016_926_959_999_7e-21},
+    "N": 512,
+    "file_path": "/tmp/nbody_gpu_test_run/data{0:08d}.h5",
+    "N_iterations": 1000,
+    "dt": 1e-09,
+    "q": 0,
+    "m": 6.633_521_356_992e-26,
+    "T": 273,
+    "box_L": 1e-07,
+    "save_every_x_iters": 100,
+    "gpu": True,
+}
+
+
+@pytest.mark.gpu
+def test_gpu_run():
+    run(**gpu_simulation_params)
+    # this test does absolutely nothing now
+    # shutil.rmtree(os.path.dirname(simulation_params["file_path"]))

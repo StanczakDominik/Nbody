@@ -42,7 +42,3 @@ def move(
     if boundary_conditions == "periodic":
         L = parse_L(L)
         r %= L
-
-
-def kinetic_energy(p, m):
-    return (p ** 2 / m).sum() / 2.0

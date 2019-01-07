@@ -5,7 +5,8 @@ from hypothesis import given
 from hypothesis.extra.numpy import arrays
 from hypothesis.strategies import floats, random_module
 
-from nbody.integrators import verlet_step, kinetic_energy
+from nbody.integrators import verlet_step
+from nbody.diagnostics import kinetic_energy
 
 N = 6
 N_iterations = 50

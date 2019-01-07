@@ -18,7 +18,7 @@ install:
   - source activate nbody
   - python setup.py install
 
-script: pytest nbody
+script: pytest -m 'not gpu' nbody 
 
 after_success:
   - codecov
