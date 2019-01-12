@@ -15,10 +15,22 @@ from nbody.integrators import verlet_step
 from nbody.diagnostics import get_all_diagnostics
 
 
-def save_iteration(hdf5_file, i_iteration, time, dt, r, p, m, q, start_parameters=None):
+def save_iteration(
+    hdf5_file,
+    i_iteration,
+    time,
+    dt,
+    r,
+    p,
+    m,
+    q,
+    save_dense_files,
+    start_parameters=None,
+):
     path = hdf5_file.format(i_iteration)
     f = create_openpmd_hdf5(path, start_parameters)
-    save_to_hdf5(f, i_iteration, time, dt, r, p, m, q)
+    if save_dense_files:
+        save_to_hdf5(f, i_iteration, time, dt, r, p, m, q)
     f.close()
     return path
 
@@ -39,6 +51,7 @@ def run(
     box_L,
     save_every_x_iters,
     gpu,
+    save_dense_files=True,
 ):
     start_parameters = dict(
         force_params=force_params,
@@ -78,7 +91,16 @@ def run(
                     diagnostic_values[i] = current_diagnostics
                     t.set_postfix(**current_diagnostics)
                     save_iteration(
-                        file_path, i, i * dt, dt, r, p, m, q, start_parameters
+                        file_path,
+                        i,
+                        i * dt,
+                        dt,
+                        r,
+                        p,
+                        m,
+                        q,
+                        start_parameters,
+                        save_dense_files,
                     )
             except KeyboardInterrupt as e:
                 print("Simulation interrupted! Saving...")

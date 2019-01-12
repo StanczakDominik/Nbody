@@ -11,6 +11,6 @@
  "m": 6.633521356992e-26,
  "T": 273,
  "box_L": 1e-12,
- "save_every_x_iters": 100,
+ "save_every_x_iters": 10000,
  "gpu": true
 }
