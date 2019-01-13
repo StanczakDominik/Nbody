@@ -15,7 +15,7 @@ def main(config="config.json"):
     gpu_simulation_params["gpu"] = True
 
     file_path_template = "/mnt/hdd/data/{}/data{{0:08d}}.h5"
-    for power in trange(3, 16, 3):
+    for power in trange(2, 10, 3):
         N = int(2 ** power)
         simulation_params["N"] = N
         gpu_simulation_params["N"] = N
