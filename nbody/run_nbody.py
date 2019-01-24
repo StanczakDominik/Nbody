@@ -48,7 +48,7 @@ def run(
     q,
     m,
     T,
-    box_L,
+    dx,
     save_every_x_iters,
     gpu,
     save_dense_files=True,
@@ -62,18 +62,20 @@ def run(
         q=q,
         m=m,
         T=T,
-        box_L=box_L,
+        dx=dx,
         save_every_x_iters=save_every_x_iters,
     )
 
-    m, q, r, p, forces, movements = initialize_matrices(N, m, q, box_L, T, gpu=gpu)
+    m, q, r, p, forces, movements = initialize_matrices(N, m, q, dx, T, gpu=gpu)
 
     calculate_forces(r, out=forces, **force_params)
 
     save_iteration(file_path, 0, 0, 0, r, p, m, q, start_parameters)
     diagnostic_values = {}
+    current_diagnostics = get_all_diagnostics(r, p, m, force_params)
+    diagnostic_values[0] = current_diagnostics
 
-    with trange(N_iterations) as t:
+    with trange(1, N_iterations + 1) as t:
         for i in t:
             try:
                 verlet_step(

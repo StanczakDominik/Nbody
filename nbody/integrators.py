@@ -1,7 +1,5 @@
 import numpy as np
 
-from nbody.initial_conditions import parse_L
-
 
 def verlet_step(r, p, m, forces, dt, force_calculator, *args, **kwargs):
     """
@@ -40,5 +38,5 @@ def move(
 ):
     r += dt * p / m
     if boundary_conditions == "periodic":
-        L = parse_L(L)
+        # L needs to be a 3-tuple, possibly [1, 3] shape
         r %= L

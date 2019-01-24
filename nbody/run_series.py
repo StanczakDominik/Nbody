@@ -1,7 +1,10 @@
+import datetime
 import json
 import click
 from tqdm import trange
 from nbody.run_nbody import run
+
+MAX_POWER = 4
 
 
 @click.command()
@@ -15,14 +18,32 @@ def main(config="config.json"):
     gpu_simulation_params["gpu"] = True
 
     file_path_template = "/mnt/hdd/data/{}/data{{0:08d}}.h5"
-    for power in trange(2, 10, 3):
-        N = int(2 ** power)
-        simulation_params["N"] = N
-        gpu_simulation_params["N"] = N
-        simulation_params["file_path"] = file_path_template.format(f"cpu{N}")
-        gpu_simulation_params["file_path"] = file_path_template.format(f"gpu{N}")
-        run(**gpu_simulation_params, save_dense_files=False)
-        run(**simulation_params, save_dense_files=False)
+    for i in range(1):
+        for power in trange(3, MAX_POWER, 3):
+            N = int(2 ** power)
+            simulation_params["N"] = N
+            gpu_simulation_params["N"] = N
+            datestring = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+            simulation_params["file_path"] = file_path_template.format(
+                f"cpu{N}_{datestring}"
+            )
+            gpu_simulation_params["file_path"] = file_path_template.format(
+                f"gpu{N}_{datestring}"
+            )
+            run(**gpu_simulation_params, save_dense_files=False)
+
+        for power in trange(3, MAX_POWER, 3):
+            N = int(2 ** power)
+            simulation_params["N"] = N
+            gpu_simulation_params["N"] = N
+            datestring = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+            simulation_params["file_path"] = file_path_template.format(
+                f"cpu{N}_{datestring}"
+            )
+            gpu_simulation_params["file_path"] = file_path_template.format(
+                f"gpu{N}_{datestring}"
+            )
+            run(**simulation_params, save_dense_files=False)
 
 
 if __name__ == "__main__":
