@@ -39,92 +39,125 @@ def check_saving_time(i_iteration, save_every_x_iters=10):
     return (i_iteration % save_every_x_iters) == 0
 
 
-def run(
-    force_params,
-    N,
-    N_iterations,
-    dt,
-    file_path,
-    q,
-    m,
-    T,
-    dx,
-    save_every_x_iters,
-    gpu,
-    save_dense_files=True,
-):
-    start_parameters = dict(
-        force_params=force_params,
-        N=N,
-        N_iterations=N_iterations,
-        dt=dt,
-        file_path=file_path,
-        q=q,
-        m=m,
-        T=T,
-        dx=dx,
-        save_every_x_iters=save_every_x_iters,
-    )
+class Simulation:
+    def __init__(
+        self,
+        force_params,
+        N,
+        N_iterations,
+        dt,
+        file_path,
+        q,
+        m,
+        T,
+        dx,
+        save_every_x_iters,
+        gpu,
+        save_dense_files=True,
+    ):
+        self.force_params = force_params
+        self.N = N
+        self.N_iterations = N_iterations
+        self.dt = dt
+        self.file_path = file_path
+        self.T = T
+        self.dx = dx
+        self.save_every_x_iters = save_every_x_iters
+        self.save_dense_files = save_dense_files
 
-    m, q, r, p, forces, movements = initialize_matrices(N, m, q, dx, T, gpu=gpu)
+        self.start_parameters = dict(
+            force_params=force_params,
+            N=N,
+            N_iterations=N_iterations,
+            dt=dt,
+            file_path=file_path,
+            q=q,
+            m=m,
+            T=T,
+            dx=dx,
+            save_every_x_iters=save_every_x_iters,
+        )
 
-    calculate_forces(r, out=forces, **force_params)
+        self.m, self.q, self.r, self.p, self.forces, self.movements = initialize_matrices(
+            N, m, q, dx, T, gpu=gpu
+        )
 
-    save_iteration(file_path, 0, 0, 0, r, p, m, q, start_parameters)
-    diagnostic_values = {}
-    current_diagnostics = get_all_diagnostics(r, p, m, force_params)
-    diagnostic_values[0] = current_diagnostics
+        self.diagnostic_values = {}
+        self.saved_hdf5_files = []
 
-    with trange(1, N_iterations + 1) as t:
-        for i in t:
-            try:
-                verlet_step(
-                    r,
-                    p,
-                    m,
-                    forces,
-                    dt,
-                    force_calculator=calculate_forces,
-                    **force_params,
-                )
+    def get_all_diagnostics(self):
+        return get_all_diagnostics(self.r, self.p, self.m, self.force_params)
 
-                if check_saving_time(i, save_every_x_iters):
-                    current_diagnostics = get_all_diagnostics(r, p, m, force_params)
-                    diagnostic_values[i] = current_diagnostics
-                    t.set_postfix(**current_diagnostics)
-                    save_iteration(
-                        file_path,
-                        i,
-                        i * dt,
-                        dt,
-                        r,
-                        p,
-                        m,
-                        q,
-                        start_parameters,
-                        save_dense_files,
-                    )
-            except KeyboardInterrupt as e:
-                print("Simulation interrupted! Saving...")
-                path = save_iteration(
-                    file_path, i, i * dt, dt, r, p, m, q, start_parameters
-                )
-                json_path = os.path.join(
-                    os.path.dirname(path), "diagnostic_results.json"
-                )
-                with open(json_path, "w") as f:
-                    json.dump(diagnostic_values, f)
-                raise Exception("Simulation interrupted!") from e
+    def update_diagnostics(self, i, diags=None):
+        if diags is None:
+            self.diagnostic_values[i] = self.get_all_diagnostics()
+        else:
+            self.diagnostic_values[i] = diags
 
-    path = save_iteration(
-        file_path, N_iterations, N_iterations * dt, dt, r, p, m, q, start_parameters
-    )
-    print(f"Saved to {os.path.dirname(path)}!")
+    def calculate_forces(self):
+        calculate_forces(self.r, out=self.forces, **self.force_params)
 
-    json_path = os.path.join(os.path.dirname(path), "diagnostic_results.json")
-    with open(json_path, "w") as f:
-        json.dump(diagnostic_values, f)
-    return diagnostic_values
+    def save_iteration(self, save_dense_files):
+        path = save_iteration(
+            self.file_path,
+            0,
+            0,
+            0,
+            self.r,
+            self.p,
+            self.m,
+            self.q,
+            self.start_parameters,
+            save_dense_files,
+        )
+        self.saved_hdf5_files.append(path)
+
+    def step(self):
+        verlet_step(
+            self.r,
+            self.p,
+            self.m,
+            self.forces,
+            self.dt,
+            force_calculator=calculate_forces,
+            **self.force_params,
+        )
+
+    def run(self, save_dense_files=None):
+        if save_dense_files is None:
+            save_dense_files = self.save_dense_files
+
+        calculate_forces(self.r, out=self.forces, **self.force_params)
+
+        self.update_diagnostics(0)
+        self.save_iteration(save_dense_files)
+
+        with trange(1, self.N_iterations + 1) as t:
+            for i in t:
+                try:
+                    self.step()
+
+                    if check_saving_time(i, self.save_every_x_iters):
+                        current_diagnostics = self.get_all_diagnostics()
+                        self.update_diagnostics(i, current_diagnostics)
+                        t.set_postfix(**current_diagnostics)
+                        self.save_iteration(save_dense_files)
+                except KeyboardInterrupt as e:
+                    print("Simulation interrupted! Saving...")
+                    self.save_iteration(save_dense_files)
+                    self.dump_json()
+                    # raise Exception("Simulation interrupted!") from e
+
+        self.save_iteration(save_dense_files)
+        return self
+
+    def dump_json(self):
+        json_path = os.path.join(
+            os.path.dirname(self.file_path), "diagnostic_results.json"
+        )
+        with open(json_path, "w") as f:
+            json.dump(self.diagnostic_values, f)
+        return self
 
 
 @click.command()
@@ -132,7 +165,7 @@ def run(
 def main(config="config.json"):
     with open(config) as f:
         simulation_params = json.load(f)
-    run(**simulation_params)
+    Simulation(**simulation_params).run(**simulation_params)
 
 
 if __name__ == "__main__":

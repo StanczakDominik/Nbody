@@ -2,7 +2,7 @@ import numpy as np
 import shutil
 import os
 import pytest
-from nbody.run_nbody import run
+from nbody.run_nbody import Simulation
 
 simulation_params = {
     "force_params": {"diameter": 3.405e-10, "well_depth": 1.654_016_926_959_999_7e-21},
@@ -20,7 +20,7 @@ simulation_params = {
 
 
 def test_run():
-    d = run(**simulation_params)
+    d = Simulation(**simulation_params).run().diagnostic_values
     for key, tolerance in {
         "kinetic_energy": 1e-20,
         "potential_energy": 1e-15,
@@ -40,7 +40,7 @@ gpu_simulation_params["gpu"] = True
 
 @pytest.mark.gpu
 def test_gpu_run():
-    d = run(**gpu_simulation_params)
+    d = Simulation(**gpu_simulation_params).run().diagnostic_values
     for key in ["kinetic_energy", "potential_energy"]:
         # print(d[min(d)][key],
         #       d[max(d)][key])
