@@ -5,7 +5,7 @@
  },
  "N": 512,
  "file_path": "/mnt/hdd/data/gpu_run_debug0/data{0:08d}.h5",
- "N_iterations": 100,
+ "N_iterations": 10,
  "dt": 1e-09,
  "q": 0,
  "m": 6.633521356992e-26,

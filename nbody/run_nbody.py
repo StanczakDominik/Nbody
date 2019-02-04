@@ -54,6 +54,7 @@ class Simulation:
         save_every_x_iters,
         gpu,
         save_dense_files=True,
+        time_offset=0,
     ):
         self.force_params = force_params
         self.N = N
@@ -64,6 +65,8 @@ class Simulation:
         self.dx = dx
         self.save_every_x_iters = save_every_x_iters
         self.save_dense_files = save_dense_files
+
+        self.time_offset = time_offset
 
         self.start_parameters = dict(
             force_params=force_params,
@@ -97,18 +100,18 @@ class Simulation:
     def calculate_forces(self):
         calculate_forces(self.r, out=self.forces, **self.force_params)
 
-    def save_iteration(self, save_dense_files):
+    def save_iteration(self, i, save_dense_files):
         path = save_iteration(
             self.file_path,
-            0,
-            0,
-            0,
+            i,
+            self.dt * i + self.time_offset,
+            self.dt,
             self.r,
             self.p,
             self.m,
             self.q,
-            self.start_parameters,
             save_dense_files,
+            self.start_parameters,
         )
         self.saved_hdf5_files.append(path)
 
@@ -130,7 +133,7 @@ class Simulation:
         calculate_forces(self.r, out=self.forces, **self.force_params)
 
         self.update_diagnostics(0)
-        self.save_iteration(save_dense_files)
+        self.save_iteration(0, save_dense_files)
 
         with trange(1, self.N_iterations + 1) as t:
             for i in t:
@@ -141,14 +144,14 @@ class Simulation:
                         current_diagnostics = self.get_all_diagnostics()
                         self.update_diagnostics(i, current_diagnostics)
                         t.set_postfix(**current_diagnostics)
-                        self.save_iteration(save_dense_files)
+                        self.save_iteration(i, save_dense_files)
                 except KeyboardInterrupt as e:
-                    print("Simulation interrupted! Saving...")
+                    print(f"Simulation interrupted by: {e.msg}! Saving...")
                     self.save_iteration(save_dense_files)
                     self.dump_json()
                     # raise Exception("Simulation interrupted!") from e
 
-        self.save_iteration(save_dense_files)
+        # self.save_iteration(self.N_iterations + 1, save_dense_files)
         return self
 
     def dump_json(self):
@@ -165,7 +168,7 @@ class Simulation:
 def main(config="config.json"):
     with open(config) as f:
         simulation_params = json.load(f)
-    Simulation(**simulation_params).run(**simulation_params)
+    Simulation(**simulation_params).run(save_dense_files=True)
 
 
 if __name__ == "__main__":
