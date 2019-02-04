@@ -66,7 +66,6 @@ class Simulation:
         self.dx = dx
         self.save_every_x_iters = save_every_x_iters
         self.save_dense_files = save_dense_files
-        self.L = N ** (1 / 3) * dx  # TODO correct for FCC etc
 
         self.time_offset = time_offset
 
@@ -83,7 +82,7 @@ class Simulation:
             save_every_x_iters=save_every_x_iters,
         )
 
-        self.m, self.q, self.r, self.p, self.forces, self.movements = initialize_matrices(
+        self.m, self.q, self.r, self.p, self.forces, self.movements, self.L = initialize_matrices(
             N, m, q, dx, T, gpu=gpu
         )
 

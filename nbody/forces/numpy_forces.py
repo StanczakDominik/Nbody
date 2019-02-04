@@ -120,4 +120,4 @@ def calculate_potentials(
     distances_ij = xp.sqrt(xp.sum(rij ** 2, axis=2, keepdims=True))
     distances_ij[xp.arange(N), xp.arange(N), :] = xp.inf
     potentials = potential_law(distances_ij, *args, **kwargs)
-    return potentials.sum() / 2
+    return potentials.sum() / 2  # TODO axis=1, then .mean, .std

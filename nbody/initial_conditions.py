@@ -62,7 +62,7 @@ def initialize_matrices(N, m, q, dx, T, gpu=False):
     initialize_zero_cm_momentum(p)
 
     r = np.empty((N, 3), dtype=float)
-    initialize_particle_lattice(r, dx)
+    L = initialize_fcc_lattice(r, dx)
 
     forces = np.empty_like(p)
     movements = np.empty_like(r)
@@ -81,9 +81,9 @@ def initialize_matrices(N, m, q, dx, T, gpu=False):
         del p
         del forces
         del movements
-        return m_gpu, q_gpu, r_gpu, p_gpu, forces_gpu, movements_gpu
+        return m_gpu, q_gpu, r_gpu, p_gpu, forces_gpu, movements_gpu, L
     else:
-        return m, q, r, p, forces, movements
+        return m, q, r, p, forces, movements, L
 
 
 def initialize_zero_cm_momentum(p):
@@ -91,7 +91,7 @@ def initialize_zero_cm_momentum(p):
     p -= average_momentum
 
 
-def initialize_particle_lattice(r, dx, dy=None, dz=None):
+def initialize_cubic_lattice(r, dx, dy=None, dz=None):
     xp = get_array_module(r)
     N = r.shape[0]
     n_side = int(np.round(N ** (1 / 3)))  # np is not a bug here
@@ -110,6 +110,32 @@ def initialize_particle_lattice(r, dx, dy=None, dz=None):
                 index_in_N = n_side ** 2 * i + n_side * j + k
                 r[index_in_N] = xp.array((i * dx, j * dy, k * dz))
     r += (dx / 2, dy / 2, dz / 2)
+    return n_side * dx
+
+
+def initialize_fcc_lattice(r, dx, dy=None, dz=None):
+    xp = get_array_module(r)
+    N = r.shape[0]
+    n_side = int(np.round((0.25 * N) ** (1 / 3)))  # np is not a bug here
+    # assume N is 4 times a cube of a natural number
+    if n_side ** 3 != N / 4:
+        raise ValueError(
+            f"FCC lattice supports only N ({N}) being cubes (not {n_side}^3) right now!"
+        )
+    if dy is None:
+        dy = dx
+    if dz is None:
+        dz = dx
+    for i in range(n_side):
+        for j in range(n_side):
+            for k in range(n_side):
+                index_in_N = 4 * (n_side ** 2 * i + n_side * j + k)
+                r[index_in_N] = xp.array((i * dx, j * dy, k * dz))
+                r[index_in_N + 1] = xp.array(((i + 0.5) * dx, (j + 0.5) * dy, k * dz))
+                r[index_in_N + 2] = xp.array(((i + 0.5) * dx, j * dy, (k + 0.5) * dz))
+                r[index_in_N + 3] = xp.array((i * dx, (j + 0.5) * dy, (k + 0.5) * dz))
+    r += (dx / 4, dy / 4, dz / 4)
+    return n_side * dx
 
 
 def create_openpmd_hdf5(path, start_parameters=None):
@@ -188,6 +214,8 @@ def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m, q):
     charge.attrs["unitSI"] = 1.0
     charge.attrs["unitDimension"] = openPMD_charge
     charge.attrs["timeOffset"] = 0.0
+
+    charge = particles.create_dataset("id", data=to_numpy(np.arange(m.size)))
 
     mass = particles.create_dataset("mass", data=to_numpy(m[:, 0]))
     mass.attrs["unitSI"] = 1.0

@@ -12,7 +12,7 @@ except ImportError:
 
 
 def kinetic_energy(p, m):
-    return float((p ** 2 / m).sum() / 2.0)
+    return float((p ** 2 / m).sum() / 2.0)  # TODO .sum, .std
 
 
 def temperature(p, m, kinetic=None):
