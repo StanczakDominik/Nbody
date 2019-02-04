@@ -37,17 +37,33 @@ def get_git_information():
 
 
 def maxwellian_momenta(T, m, k_B=k_B):
-    return np.random.normal(scale=np.sqrt(k_B * T / m), size=(m.size, 3)) * m
+    """
+    as per https://scicomp.stackexchange.com/a/19971/22644
+
+    Parameters
+    ----------
+    T :
+    m :
+    k_B :
+
+    Returns
+    -------
+
+    """
+    return np.random.normal(size=(m.size, 3)) * (T * k_B * m) ** 0.5
 
 
 def initialize_matrices(N, m, q, dx, T, gpu=False):
     # initialized on
     m = np.full((N, 1), m, dtype=float)
     q = np.full((N, 1), q, dtype=float)
-    r = np.empty((N, 3), dtype=float)
-    p = maxwellian_momenta(T, m)
+    p = np.zeros((N, 3), dtype=float)
+    p += maxwellian_momenta(T, m)
     initialize_zero_cm_momentum(p)
+
+    r = np.empty((N, 3), dtype=float)
     initialize_particle_lattice(r, dx)
+
     forces = np.empty_like(p)
     movements = np.empty_like(r)
     if gpu:

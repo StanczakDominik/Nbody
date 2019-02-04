@@ -1,5 +1,6 @@
 import json
 import os
+import numpy as np
 
 import click
 from tqdm import trange
@@ -152,6 +153,7 @@ class Simulation:
                     # raise Exception("Simulation interrupted!") from e
 
         # self.save_iteration(self.N_iterations + 1, save_dense_files)
+        self.dump_json()
         return self
 
     def dump_json(self):
