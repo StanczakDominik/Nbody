@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def verlet_step(r, p, m, forces, dt, L_for_PBC, force_calculator, *args, **kwargs):
+def verlet_step(r, p, m, forces, dt, force_calculator, L_for_PBC=None, *args, **kwargs):
     """
     Velocity Verlet algorithm - Allen page 10
 

@@ -31,10 +31,10 @@ def test_verlet_integrator_reversible(random, v):
     kinetic_init = kinetic_energy(p_init, m)
 
     for i in range(N_iterations):
-        verlet_step(r, p, m, forces, dt, calculate_forces)
+        verlet_step(r, p, m, forces, dt, force_calculator=calculate_forces)
 
     for i in range(N_iterations):
-        verlet_step(r, p, m, forces, -dt, calculate_forces)
+        verlet_step(r, p, m, forces, -dt, force_calculator=calculate_forces)
 
     np.testing.assert_allclose(r, r_init, atol=1e-8)
     np.testing.assert_allclose(p, p_init, atol=1e-8)

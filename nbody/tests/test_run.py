@@ -22,8 +22,8 @@ simulation_params = {
 def test_run():
     d = Simulation(**simulation_params).run().diagnostic_values
     for key, tolerance in {
-        "kinetic_energy": 1e-20,
-        "potential_energy": 1e-15,
+        "kinetic_energy": 1e-12,
+        "potential_energy": 1e-12,
         "std_r": 1e-8,
     }.items():
         print(key, d[max(d)][key], d[min(d)][key])
@@ -42,8 +42,6 @@ gpu_simulation_params["gpu"] = True
 def test_gpu_run():
     d = Simulation(**gpu_simulation_params).run().diagnostic_values
     for key in ["kinetic_energy", "potential_energy"]:
-        # print(d[min(d)][key],
-        #       d[max(d)][key])
         assert np.isclose(d[min(d)][key], d[max(d)][key])
     shutil.rmtree(os.path.dirname(gpu_simulation_params["file_path"]))
     return d
