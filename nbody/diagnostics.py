@@ -30,10 +30,10 @@ def mean_std(r):
     return tuple(to_numpy(r.mean(axis=0))), tuple(to_numpy(r.std(axis=0)))
 
 
-def get_all_diagnostics(r, p, m, force_params):
+def get_all_diagnostics(r, p, m, force_params, L_for_PBC=None):
     kinetic = kinetic_energy(p, m)
     temp = temperature(p, m, kinetic)
-    potential = float(calculate_potentials(r, **force_params))
+    potential = float(calculate_potentials(r, **force_params, L_for_PBC=L_for_PBC))
     mean_r, std_r = mean_std(r)
     mean_p, std_p = mean_std(p)
     return dict(

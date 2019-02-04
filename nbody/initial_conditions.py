@@ -109,6 +109,7 @@ def initialize_particle_lattice(r, dx, dy=None, dz=None):
             for k in range(n_side):
                 index_in_N = n_side ** 2 * i + n_side * j + k
                 r[index_in_N] = xp.array((i * dx, j * dy, k * dz))
+    r += (dx / 2, dy / 2, dz / 2)
 
 
 def create_openpmd_hdf5(path, start_parameters=None):

@@ -32,7 +32,12 @@ def lenard_jones_potential(r, well_depth=1, diameter=1):
 
 
 def calculate_forces(
-    r: np.ndarray, force_law=lenard_jones_force, out=None, *args, **kwargs
+    r: np.ndarray,
+    force_law=lenard_jones_force,
+    L_for_PBC=None,
+    out=None,
+    *args,
+    **kwargs,
 ):
     """
 
@@ -61,6 +66,9 @@ def calculate_forces(
     xp = get_array_module(r)
     N = r.shape[0]
     rij = r.reshape(N, 1, 3) - r.reshape(1, N, 3)
+    if L_for_PBC is not None:
+        rij[rij > L_for_PBC / 2] -= L_for_PBC
+        rij[rij < -L_for_PBC / 2] += L_for_PBC
     distances_ij = xp.sqrt(xp.sum(rij ** 2, axis=2, keepdims=True))
     distances_ij[xp.arange(N), xp.arange(N), :] = xp.inf
     directions_ij = rij / distances_ij
@@ -72,7 +80,12 @@ def calculate_forces(
 
 
 def calculate_potentials(
-    r: np.ndarray, potential_law=lenard_jones_potential, out=None, *args, **kwargs
+    r: np.ndarray,
+    potential_law=lenard_jones_potential,
+    L_for_PBC=None,
+    out=None,
+    *args,
+    **kwargs,
 ):
     """
 
@@ -101,6 +114,9 @@ def calculate_potentials(
     xp = get_array_module(r)
     N = r.shape[0]
     rij = r.reshape(N, 1, 3) - r.reshape(1, N, 3)
+    if L_for_PBC is not None:
+        rij[rij > L_for_PBC / 2] -= L_for_PBC
+        rij[rij < -L_for_PBC / 2] += L_for_PBC
     distances_ij = xp.sqrt(xp.sum(rij ** 2, axis=2, keepdims=True))
     distances_ij[xp.arange(N), xp.arange(N), :] = xp.inf
     potentials = potential_law(distances_ij, *args, **kwargs)

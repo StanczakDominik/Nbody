@@ -66,6 +66,7 @@ class Simulation:
         self.dx = dx
         self.save_every_x_iters = save_every_x_iters
         self.save_dense_files = save_dense_files
+        self.L = N ** (1 / 3) * dx  # TODO correct for FCC etc
 
         self.time_offset = time_offset
 
@@ -90,7 +91,7 @@ class Simulation:
         self.saved_hdf5_files = []
 
     def get_all_diagnostics(self):
-        return get_all_diagnostics(self.r, self.p, self.m, self.force_params)
+        return get_all_diagnostics(self.r, self.p, self.m, self.force_params, self.L)
 
     def update_diagnostics(self, i, diags=None):
         if diags is None:
@@ -123,6 +124,7 @@ class Simulation:
             self.m,
             self.forces,
             self.dt,
+            L_for_PBC=self.L,
             force_calculator=calculate_forces,
             **self.force_params,
         )
@@ -131,7 +133,7 @@ class Simulation:
         if save_dense_files is None:
             save_dense_files = self.save_dense_files
 
-        calculate_forces(self.r, out=self.forces, **self.force_params)
+        calculate_forces(self.r, L_for_PBC=self.L, out=self.forces, **self.force_params)
 
         self.update_diagnostics(0)
         self.save_iteration(0, save_dense_files)
@@ -144,10 +146,12 @@ class Simulation:
                     if check_saving_time(i, self.save_every_x_iters):
                         current_diagnostics = self.get_all_diagnostics()
                         self.update_diagnostics(i, current_diagnostics)
+
                         t.set_postfix(**current_diagnostics)
+
                         self.save_iteration(i, save_dense_files)
                 except KeyboardInterrupt as e:
-                    print(f"Simulation interrupted by: {e.msg}! Saving...")
+                    print(f"Simulation interrupted by: {e}! Saving...")
                     self.save_iteration(save_dense_files)
                     self.dump_json()
                     # raise Exception("Simulation interrupted!") from e
