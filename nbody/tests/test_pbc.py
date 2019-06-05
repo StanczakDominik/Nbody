@@ -23,7 +23,7 @@ simulation_params = {
     "force_params": {"diameter": 3.405e-10, "well_depth": 1.654_016_926_959_999_7e-21},
     "N": 32,
     "file_path": "/tmp/nbody_collisions/data{0:08d}.h5",
-    "N_iterations": 3000,
+    "N_iterations": 6000,
     "dt": 1e-16,
     "q": 0,
     "m": 6.633_521_356_992e-26,
@@ -35,7 +35,7 @@ simulation_params = {
 
 
 def test_run():
-    np.random.seed(0)
+    np.random.seed(4)
     d = Simulation(**simulation_params).run()
     df = d.diagnostic_df()
     for key, tolerance in {
@@ -46,7 +46,7 @@ def test_run():
         fitting = np.allclose(df.iloc[0][key], df.iloc[-1][key], atol=tolerance)
         if not fitting:
             df.plot('t', ['kinetic_energy', 'potential_energy'], logy=True)
-            df.plot('t', ['min_distance', 'max_distance'])
+            df.plot('t', ['min_distance', 'max_distance'], grid=True)
             plt.show()
             np.testing.assert_allclose(first_d[key], last_d[key], atol=tolerance)
     shutil.rmtree(os.path.dirname(simulation_params["file_path"]))
