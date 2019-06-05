@@ -116,7 +116,7 @@ def initialize_cubic_lattice(r, dx, dy=None, dz=None):
 def initialize_fcc_lattice(r, dx, dy=None, dz=None):
     xp = get_array_module(r)
     N = r.shape[0]
-    n_side = int(np.round((0.25 * N) ** (1 / 3)))  # np is not a bug here
+    n_side = int(np.round((N / 4) ** (1 / 3)))  # np is not a bug here
     # assume N is 4 times a cube of a natural number
     if n_side ** 3 != N / 4:
         raise ValueError(

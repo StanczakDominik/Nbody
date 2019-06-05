@@ -4,6 +4,7 @@ import numpy as np
 
 import click
 from tqdm import trange
+import pandas
 
 from nbody.forces.numpy_forces import calculate_forces
 
@@ -97,6 +98,10 @@ class Simulation:
             self.diagnostic_values[i] = self.get_all_diagnostics()
         else:
             self.diagnostic_values[i] = diags
+        self.diagnostic_values[i]["t"] = i * self.dt
+
+    def diagnostic_df(self):
+        return pandas.DataFrame(self.diagnostic_values).T
 
     def calculate_forces(self):
         calculate_forces(self.r, out=self.forces, **self.force_params)
