@@ -18,9 +18,13 @@ def verlet_step(r, p, m, forces, dt, force_calculator, L_for_PBC=None, *args, **
     -------
 
     """
+    # calculate velocity at half timestep - v_t+0.5 = v_t + 0.5 a_t dt
     accelerate(p, forces, dt / 2)
+    # calculate position at full timestep - x_t+1 = x_t+1 + v_t+0.5 dt
     move(r, p, m, dt, L_for_PBC)
+    # calculate force at full timestep - a_t+1 = function(interaction potential, x_t+1)
     force_calculator(r, m=m, L_for_PBC=L_for_PBC, out=forces, *args, **kwargs)
+    # calculate second half of acceleration - v_t+1 = v_t+0.5 + 0.5 a_t+1 dt
     accelerate(p, forces, dt / 2)
 
 

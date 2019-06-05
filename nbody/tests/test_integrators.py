@@ -12,6 +12,7 @@ from nbody.diagnostics import kinetic_energy
 N = 6
 N_iterations = 50
 
+ATOL = 1e-10
 
 @given(
     random=random_module(),
@@ -38,10 +39,10 @@ def test_verlet_integrator_reversible(random, v):
     for i in range(N_iterations):
         verlet_step(r, p, m, forces, -dt, force_calculator=calculate_forces)
 
-    np.testing.assert_allclose(r, r_init)
-    np.testing.assert_allclose(p, p_init)
+    np.testing.assert_allclose(r, r_init, atol=ATOL)
+    np.testing.assert_allclose(p, p_init, atol=ATOL)
     kinetic_final = kinetic_energy(p, m)
-    np.testing.assert_allclose(kinetic_init, kinetic_final)
+    np.testing.assert_allclose(kinetic_init, kinetic_final, atol=ATOL)
 
 
 @given(
@@ -68,10 +69,10 @@ def test_verlet_integrator_reversible_instant(random, v):
     for i in range(N_iterations):
         verlet_step(r, p, m, forces, -dt, force_calculator=calculate_forces)
 
-    np.testing.assert_allclose(r, r_init)
-    np.testing.assert_allclose(p, p_init)
+    np.testing.assert_allclose(r, r_init, atol=ATOL)
+    np.testing.assert_allclose(p, p_init, atol=ATOL)
     kinetic_final = kinetic_energy(p, m)
-    np.testing.assert_allclose(kinetic_init, kinetic_final)
+    np.testing.assert_allclose(kinetic_init, kinetic_final, atol=ATOL)
 
 
 @given(
@@ -99,10 +100,10 @@ def test_verlet_integrator_reversible_noforce(random, v):
     for i in range(N_iterations):
         verlet_step(r, p, m, forces, -dt, force_calculator=calculate_forces)
 
-    np.testing.assert_allclose(r, r_init)
-    np.testing.assert_allclose(p, p_init)
+    np.testing.assert_allclose(r, r_init, atol=ATOL)
+    np.testing.assert_allclose(p, p_init, atol=ATOL)
     kinetic_final = kinetic_energy(p, m)
-    np.testing.assert_allclose(kinetic_init, kinetic_final)
+    np.testing.assert_allclose(kinetic_init, kinetic_final, atol=ATOL)
 
 
 @given(
@@ -130,10 +131,10 @@ def test_verlet_integrator_reversible_uniform_force(random, v):
     for i in range(N_iterations):
         verlet_step(r, p, m, forces, -dt, force_calculator=calculate_forces)
 
-    np.testing.assert_allclose(r, r_init)
-    np.testing.assert_allclose(p, p_init)
+    np.testing.assert_allclose(r, r_init, atol=ATOL)
+    np.testing.assert_allclose(p, p_init, atol=ATOL)
     kinetic_final = kinetic_energy(p, m)
-    np.testing.assert_allclose(kinetic_init, kinetic_final)
+    np.testing.assert_allclose(kinetic_init, kinetic_final, atol=ATOL)
 
 
 @given(
@@ -162,7 +163,7 @@ def test_verlet_integrator_reversible_minusr_force(random, v):
     for i in range(N_iterations):
         verlet_step(r, p, m, forces, -dt, force_calculator=calculate_forces)
 
-    np.testing.assert_allclose(r, r_init)
-    np.testing.assert_allclose(p, p_init)
+    np.testing.assert_allclose(r, r_init, atol=ATOL)
+    np.testing.assert_allclose(p, p_init, atol=ATOL)
     kinetic_final = kinetic_energy(p, m)
-    np.testing.assert_allclose(kinetic_init, kinetic_final)
+    np.testing.assert_allclose(kinetic_init, kinetic_final, atol=ATOL)
