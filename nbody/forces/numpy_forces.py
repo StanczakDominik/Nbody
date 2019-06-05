@@ -67,8 +67,7 @@ def calculate_forces(
     N = r.shape[0]
     rij = r.reshape(N, 1, 3) - r.reshape(1, N, 3)
     if L_for_PBC is not None:
-        rij[rij > L_for_PBC / 2] -= L_for_PBC
-        rij[rij < -L_for_PBC / 2] += L_for_PBC
+        rij -= L_for_PBC * xp.around(rij / L_for_PBC)
     distances_ij = xp.sqrt(xp.sum(rij ** 2, axis=2, keepdims=True))
     distances_ij[xp.arange(N), xp.arange(N), :] = xp.inf
     directions_ij = rij / distances_ij
@@ -115,8 +114,7 @@ def calculate_potentials(
     N = r.shape[0]
     rij = r.reshape(N, 1, 3) - r.reshape(1, N, 3)
     if L_for_PBC is not None:
-        rij[rij > L_for_PBC / 2] -= L_for_PBC
-        rij[rij < -L_for_PBC / 2] += L_for_PBC
+        rij -= L_for_PBC * xp.around(rij / L_for_PBC)
     distances_ij = xp.sqrt(xp.sum(rij ** 2, axis=2, keepdims=True))
     distances_ij[xp.arange(N), xp.arange(N), :] = xp.inf
     potentials = potential_law(distances_ij, *args, **kwargs)

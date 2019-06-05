@@ -146,12 +146,16 @@ class Simulation:
                         current_diagnostics = self.get_all_diagnostics()
                         self.update_diagnostics(i, current_diagnostics)
 
-                        t.set_postfix(**current_diagnostics)
+                        t.set_postfix(
+                            kinetic_energy=current_diagnostics["kinetic_energy"],
+                            potential_energy=current_diagnostics["potential_energy"],
+                            temperature=current_diagnostics["temperature"],
+                        )
 
                         self.save_iteration(i, save_dense_files)
                 except KeyboardInterrupt as e:
                     print(f"Simulation interrupted by: {e}! Saving...")
-                    self.save_iteration(save_dense_files)
+                    self.save_iteration(i, save_dense_files)
                     self.dump_json()
                     # raise Exception("Simulation interrupted!") from e
 
@@ -168,13 +172,40 @@ class Simulation:
         return self
 
 
-@click.command()
-@click.option("--config", default="config.json", help="Config")
-def main(config="config.json"):
+# @click.command()
+# @click.option("--config", default="config.json", help="Config")
+# @click.option("--n", default=None)
+# @click.option("--iterations", default=None)
+def main(config="config.json", n=None, iterations=None):
     with open(config) as f:
         simulation_params = json.load(f)
-    Simulation(**simulation_params).run(save_dense_files=True)
+    if iterations is not None:
+        simulation_params["N_iterations"] = iterations
+    if n is not None:
+        simulation_params["N"] = n
+
+    S = Simulation(**simulation_params)
+    S.run(save_dense_files=False)
+    return S
 
 
 if __name__ == "__main__":
-    main()
+    for seed in range(0, 10):
+        print(seed)
+        np.random.seed(seed)
+        import cupy
+
+        cupy.random.seed(seed)
+        S = main()
+        conserved_temperature = (
+            S.diagnostic_values[0]["temperature"] * 1.01
+            > S.diagnostic_values[max(S.diagnostic_values)]["temperature"]
+        )
+        if not conserved_temperature:
+            for index in S.diagnostic_values:
+                if (
+                    S.diagnostic_values[index]["temperature"]
+                    < 1.01 * S.diagnostic_values[0]["temperature"]
+                ):
+                    print(f"Messed up at {index}")
+                    break
