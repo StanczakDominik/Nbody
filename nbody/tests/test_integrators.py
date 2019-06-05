@@ -10,7 +10,8 @@ from nbody.integrators import verlet_step
 from nbody.diagnostics import kinetic_energy
 
 N = 6
-N_iterations = 50
+N_iterations = 500
+dt = 1e-10
 
 ATOL = 1e-10
 
@@ -23,8 +24,6 @@ ATOL = 1e-10
     ),
 )
 def test_verlet_integrator_reversible(random, v):
-    N_iterations = 10
-    dt = 1e-6
     r = np.random.random(size=v.shape) * 2
     m = np.ones((r.shape[0], 1), dtype=float)
     p = m * v
@@ -54,8 +53,6 @@ def test_verlet_integrator_reversible(random, v):
     ),
 )
 def test_verlet_integrator_reversible_instant(random, v):
-    N_iterations = 10
-    dt = 1e-6
     r = np.random.random(size=v.shape) * 2
     m = np.ones((r.shape[0], 1), dtype=float)
     p = m * v
@@ -66,7 +63,6 @@ def test_verlet_integrator_reversible_instant(random, v):
 
     for i in range(N_iterations):
         verlet_step(r, p, m, forces, dt, force_calculator=calculate_forces)
-    for i in range(N_iterations):
         verlet_step(r, p, m, forces, -dt, force_calculator=calculate_forces)
 
     np.testing.assert_allclose(r, r_init, atol=ATOL)
@@ -84,8 +80,6 @@ def test_verlet_integrator_reversible_instant(random, v):
     ),
 )
 def test_verlet_integrator_reversible_noforce(random, v):
-    N_iterations = 1000
-    dt = 1e-6
     r = np.random.random(size=v.shape) * 2
     m = np.ones((r.shape[0], 1), dtype=float)
     p = m * v
@@ -115,8 +109,6 @@ def test_verlet_integrator_reversible_noforce(random, v):
     ),
 )
 def test_verlet_integrator_reversible_uniform_force(random, v):
-    N_iterations = 10
-    dt = 1e-6
     r = np.random.random(size=v.shape) * 2
     m = np.ones((r.shape[0], 1), dtype=float)
     p = m * v
@@ -146,8 +138,6 @@ def test_verlet_integrator_reversible_uniform_force(random, v):
     ),
 )
 def test_verlet_integrator_reversible_minusr_force(random, v):
-    N_iterations = 10
-    dt = 1e-6
     r = np.random.random(size=v.shape) * 2
     m = np.ones((r.shape[0], 1), dtype=float)
     p = m * v
