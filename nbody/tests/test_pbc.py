@@ -31,8 +31,9 @@ def test_run():
     }.items():
         fitting = np.allclose(df.iloc[0][key], df.iloc[-1][key], atol=tolerance)
         if not fitting:
-            df.plot('t', ['kinetic_energy', 'potential_energy'], logy=True)
-            df.plot('t', ['min_distance', 'max_distance'], grid=True)
+            fig, (ax1, ax2)= plt.subplots(nrows=2, sharex=True)
+            df.plot('t', ['kinetic_energy', 'potential_energy'], logy=True, ax=ax1)
+            df.plot('t', ['min_distance', 'max_distance'], grid=True, ax=ax2)
             plt.show()
             break
     if not fitting:

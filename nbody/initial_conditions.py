@@ -222,4 +222,10 @@ def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m, q):
     mass.attrs["unitDimension"] = openPMD_mass
     mass.attrs["timeOffset"] = 0.0
 
-    # TODO MAYBE particlePatches as defined by openPMD?
+def save_xyz(filename, r, atom_name, comment="comment"):
+    with open(filename, "w") as f:
+        f.write(f"{len(r)}\n{comment}\n")
+        for x, y, z in r:
+            f.write(f"{atom_name} {x:.8f} {y:.8f} {z:.8f}\n")
+
+    # np.savetxt(filename, r, newline = f"\n{atom_name} ", header=f"{len(r)}\ncomment line", comments='', footer="\r")

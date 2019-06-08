@@ -12,6 +12,7 @@ from nbody.initial_conditions import (
     initialize_matrices,
     create_openpmd_hdf5,
     save_to_hdf5,
+    save_xyz
 )
 from nbody.integrators import verlet_step
 from nbody.diagnostics import get_all_diagnostics
@@ -30,10 +31,10 @@ def save_iteration(
     start_parameters=None,
 ):
     path = hdf5_file.format(i_iteration)
-    f = create_openpmd_hdf5(path, start_parameters)
-    if save_dense_files:
-        save_to_hdf5(f, i_iteration, time, dt, r, p, m, q)
-    f.close()
+    with create_openpmd_hdf5(path, start_parameters) as f:
+        if save_dense_files:
+            save_to_hdf5(f, i_iteration, time, dt, r, p, m, q)
+    save_xyz(path.replace(".h5", ".xyz"), r, "Ar")
     return path
 
 

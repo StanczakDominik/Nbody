@@ -1,7 +1,7 @@
 import os
 import random
 import string
-from nbody.initial_conditions import create_openpmd_hdf5, maxwellian_momenta, k_B
+from nbody.initial_conditions import create_openpmd_hdf5, maxwellian_momenta, k_B, save_xyz
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
@@ -32,3 +32,6 @@ def test_maxwellian_momenta():
     assert_allclose(p.mean(), 0, atol=1e-12)
     assert_allclose(p.var(), k_B * T / 1, atol=1e-12)
     assert_allclose(p.var(axis=0), k_B * T / 1, atol=1e-12)
+
+def test_xyz():
+    save_xyz("/tmp/test.xyz", np.random.random((10, 3)) * 10, "Ar")
