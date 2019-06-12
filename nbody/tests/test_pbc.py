@@ -6,15 +6,15 @@ import pytest
 from nbody.run_nbody import Simulation
 
 simulation_params = {
-    "force_params": {"diameter": 3.405e-10, "well_depth": 1.654_016_926_959_999_7e-21},
+    "force_params": {"diameter": 0.1, "well_depth": 10},
     "N": 32,
     "file_path": "/tmp/nbody_collisions/data{0:08d}.h5",
-    "N_iterations": 6000,
-    "dt": 1e-16,
+    "N_iterations": 60000,
+    "dt": 1e-4,
     "q": 0,
-    "m": 6.633_521_356_992e-26,
-    "T": 273,
-    "dx": 3.82e-10,
+    "m": 1,
+    "T": 0,
+    "dx": 10,
     "save_every_x_iters": 10,
     "gpu": False,
 }

@@ -1,3 +1,1 @@
-import astropy.constants
-
-k_B = astropy.constants.k_B.si.value
+k_B = 1
