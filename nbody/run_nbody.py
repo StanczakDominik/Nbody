@@ -14,7 +14,7 @@ from nbody.initial_conditions import (
     save_to_hdf5,
     save_xyz
 )
-from nbody.integrators import verlet_step
+from nbody.integrators import verlet_step, beeman_step
 from nbody.diagnostics import get_all_diagnostics
 
 
@@ -87,6 +87,7 @@ class Simulation:
         self.m, self.q, self.r, self.p, self.forces, self.movements, self.L = initialize_matrices(
             N, m, q, dx, T, gpu=gpu
         )
+        self.previous_forces = self.forces.copy()
 
         self.diagnostic_values = {}
         self.saved_hdf5_files = []
@@ -123,7 +124,7 @@ class Simulation:
         self.saved_hdf5_files.append(path)
 
     def step(self):
-        verlet_step(
+        beeman_step(
             self.r,
             self.p,
             self.m,
@@ -131,6 +132,7 @@ class Simulation:
             self.dt,
             L_for_PBC=self.L,
             force_calculator=calculate_forces,
+            forces_previous = self.previous_forces,
             **self.force_params,
         )
 
@@ -138,7 +140,7 @@ class Simulation:
         if save_dense_files is None:
             save_dense_files = self.save_dense_files
 
-        calculate_forces(self.r, L_for_PBC=self.L, out=self.forces, **self.force_params)
+        calculate_forces(self.r, L_for_PBC=self.L, out=self.forces, previous_forces = self.previous_forces, **self.force_params)
 
         self.update_diagnostics(0)
         self.save_iteration(0, save_dense_files)
@@ -196,22 +198,23 @@ def main(config="config.json", n=None, iterations=None):
 
 
 if __name__ == "__main__":
-    for seed in range(0, 10):
-        print(seed)
-        np.random.seed(seed)
-        import cupy
+    S = main()
+    # for seed in range(0, 10):
+    #     print(seed)
+    #     np.random.seed(seed)
+    #     # import cupy
 
-        cupy.random.seed(seed)
-        S = main()
-        conserved_temperature = (
-            S.diagnostic_values[0]["temperature"] * 1.01
-            > S.diagnostic_values[max(S.diagnostic_values)]["temperature"]
-        )
-        if not conserved_temperature:
-            for index in S.diagnostic_values:
-                if (
-                    S.diagnostic_values[index]["temperature"]
-                    < 1.01 * S.diagnostic_values[0]["temperature"]
-                ):
-                    print(f"Messed up at {index}")
-                    break
+    #     # cupy.random.seed(seed)
+    #     S = main()
+    #     conserved_temperature = (
+    #         S.diagnostic_values[0]["temperature"] * 1.01
+    #         > S.diagnostic_values[max(S.diagnostic_values)]["temperature"]
+    #     )
+    #     if not conserved_temperature:
+    #         for index in S.diagnostic_values:
+    #             if (
+    #                 S.diagnostic_values[index]["temperature"]
+    #                 < 1.01 * S.diagnostic_values[0]["temperature"]
+    #             ):
+    #                 print(f"Messed up at {index}")
+    #                 break
