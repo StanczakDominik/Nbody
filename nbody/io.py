@@ -1,9 +1,20 @@
 import datetime
+import numpy as np
 import os
 import json
 import time
 import git
 import h5py
+
+try:
+    import cupy
+
+    to_numpy = cupy.asnumpy
+    get_array_module = lambda *args, **kwargs: cupy.get_array_module(*args, **kwargs)
+except ImportError:
+    to_numpy = lambda x: x
+    get_array_module = lambda *args, **kwargs: np
+
 def get_git_information():
     if "TRAVIS" not in os.environ:
         path = os.path.dirname(os.path.dirname(__file__))
@@ -53,7 +64,7 @@ def create_openpmd_hdf5(path, start_parameters=None):
     return f
 
 
-def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m, q):
+def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m):
     # TODO use OpenPMD for saving instead of hdf5?
     N = r.shape[0]
 
@@ -91,14 +102,9 @@ def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m, q):
         momentum.attrs["unitDimension"] = openPMD_momentum
         momentum.attrs["timeOffset"] = 0.0
 
-    charge = particles.create_dataset("charge", data=to_numpy(q[:, 0]))
-    charge.attrs["unitSI"] = 1.0
-    charge.attrs["unitDimension"] = openPMD_charge
-    charge.attrs["timeOffset"] = 0.0
+    particle_id = particles.create_dataset("id", data=to_numpy(np.arange(m.size)))
 
-    charge = particles.create_dataset("id", data=to_numpy(np.arange(m.size)))
-
-    mass = particles.create_dataset("mass", data=to_numpy(m[:, 0]))
+    mass = particles.create_dataset("mass", data=to_numpy(m))
     mass.attrs["unitSI"] = 1.0
     mass.attrs["unitDimension"] = openPMD_mass
     mass.attrs["timeOffset"] = 0.0

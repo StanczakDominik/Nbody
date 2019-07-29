@@ -22,7 +22,7 @@ from nbody.constants import k_B
 
 
 def kinetic_energy(p, m):
-    return float((p ** 2 / m).sum() / 2.0)  # TODO .sum, .std
+    return float((p ** 2 / m[:, np.newaxis]).sum() / 2.0)  # TODO .sum, .std
 
 
 def temperature(p, m, kinetic=None):
@@ -34,11 +34,6 @@ def temperature(p, m, kinetic=None):
     if kinetic is None:
         kinetic = kinetic_energy(p, m)
     return float(kinetic * 2 / (k_B * Nf))
-
-
-def mean_std(r):
-    return tuple(to_numpy(r.mean(axis=0))), tuple(to_numpy(r.std(axis=0)))
-
 
 def save_iteration(
         hdf5_file,
@@ -54,7 +49,7 @@ def save_iteration(
     path = hdf5_file.format(i_iteration)
     with create_openpmd_hdf5(path, start_parameters) as f:
         if save_dense_files:
-            save_to_hdf5(f, i_iteration, time, dt, r, p, m, q)
+            save_to_hdf5(f, i_iteration, time, dt, r, p, m)
     save_xyz(path.replace(".h5", ".xyz"), r, "Ar")
     return path
 
@@ -107,7 +102,6 @@ class Simulation:
         )
 
         self.m = np.full(N, m, dtype=float)
-        self.q = np.full(N, q, dtype=float)
         self.p = np.zeros((N, 3), dtype=float)
         self.p += self.maxwellian_momenta(T)
         # self.p -= p.mean(axis=0)
@@ -123,7 +117,6 @@ class Simulation:
             import cupy as cp
 
             self.m = cp.asarray(self.m)
-            self.q = cp.asarray(self.q)
             self.r = cp.asarray(self.r)
             self.p = cp.asarray(self.p)
             self.forces = cp.asarray(self.forces)
@@ -138,19 +131,12 @@ class Simulation:
         temp = temperature(self.p, self.m, kinetic)
         potentials = np.empty_like(self.potentials)
         get_forces(self.r, potentials=potentials)
-        mean_r, std_r = mean_std(r)
-        mean_p, std_p = mean_std(p)
+        total_potential = potentials.sum()
         return dict(
             kinetic_energy=kinetic,
             temperature=temp,
-            potential_energy=potentials.sum(),
-            total_energy=kinetic+potential,
-            mean_r=mean_r,
-            std_r=std_r,
-            mean_p=mean_p,
-            std_p=std_p,
-            max_distance = max_distance,
-            min_distance = min_distance,
+            potential_energy=total_potential,
+            total_energy=kinetic+total_potential,
         )
         return get_all_diagnostics(self.r, self.p, self.m, self.force_params, self.L)
 
@@ -173,24 +159,13 @@ class Simulation:
             self.r,
             self.p,
             self.m,
-            self.q,
             save_dense_files,
             self.start_parameters,
         )
         self.saved_hdf5_files.append(path)
 
     def step(self):
-        beeman_step(
-            self.r,
-            self.p,
-            self.m,
-            self.forces,
-            self.dt,
-            L_for_PBC=self.L,
-            force_calculator=calculate_forces,
-            forces_previous = self.previous_forces,
-            **self.force_params,
-        )
+        raise NotImplementedError
 
     def run(self, save_dense_files=None):
         if save_dense_files is None:
