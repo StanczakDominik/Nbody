@@ -6,29 +6,48 @@ import click
 from tqdm import trange
 import pandas
 
-from nbody.forces import calculate_forces
+from nbody.forces.numba_forces import get_forces
 
 from nbody.initial_conditions import (
-    initialize_matrices,
     create_openpmd_hdf5,
+    initialize_cubic_lattice,
+    initialize_fcc_lattice,
     save_to_hdf5,
     save_xyz
 )
 from nbody.integrators import verlet_step, beeman_step
-from nbody.diagnostics import get_all_diagnostics
+from nbody.constants import k_B
+
+
+def kinetic_energy(p, m):
+    return float((p ** 2 / m).sum() / 2.0)  # TODO .sum, .std
+
+
+def temperature(p, m, kinetic=None):
+    """
+    https://physics.stackexchange.com/questions/175833/calculating-temperature-from-molecular-dynamics-simulation
+    """
+    N = p.shape[0]
+    Nf = 3 * N - 3
+    if kinetic is None:
+        kinetic = kinetic_energy(p, m)
+    return float(kinetic * 2 / (k_B * Nf))
+
+
+def mean_std(r):
+    return tuple(to_numpy(r.mean(axis=0))), tuple(to_numpy(r.std(axis=0)))
 
 
 def save_iteration(
-    hdf5_file,
-    i_iteration,
-    time,
-    dt,
-    r,
-    p,
-    m,
-    q,
-    save_dense_files,
-    start_parameters=None,
+        hdf5_file,
+        i_iteration,
+        time,
+        dt,
+        r,
+        p,
+        m,
+        save_dense_files,
+        start_parameters=None,
 ):
     path = hdf5_file.format(i_iteration)
     with create_openpmd_hdf5(path, start_parameters) as f:
@@ -71,6 +90,7 @@ class Simulation:
 
         self.time_offset = time_offset
 
+        # TODO remove
         self.start_parameters = dict(
             force_params=force_params,
             N=N,
@@ -84,15 +104,52 @@ class Simulation:
             save_every_x_iters=save_every_x_iters,
         )
 
-        self.m, self.q, self.r, self.p, self.forces, self.movements, self.L = initialize_matrices(
-            N, m, q, dx, T, gpu=gpu
-        )
-        self.previous_forces = calculate_forces(self.r - self.p / self.m * self.dt)
+        self.m = np.full((N, 1), m, dtype=float)
+        self.q = np.full((N, 1), q, dtype=float)
+        self.p = np.zeros((N, 3), dtype=float)
+        self.p += self.maxwellian_momenta(T)
+        # self.p -= p.mean(axis=0)
+
+        self.r = np.empty((N, 3), dtype=float)
+        self.L = initialize_fcc_lattice(self.r, self.dx)
+
+        self.forces = np.zeros_like(self.p)
+        self.potentials = np.zeros_like(self.m)
+        self.movements = np.zeros_like(self.r)
+
+        if gpu:
+            import cupy as cp
+
+            self.m = cp.asarray(self.m)
+            self.q = cp.asarray(self.q)
+            self.r = cp.asarray(self.r)
+            self.p = cp.asarray(self.p)
+            self.forces = cp.asarray(self.forces)
+            self.potentials = cp.asarray(self.potentials)
+            self.movements = cp.asarray(self.movements)
 
         self.diagnostic_values = {}
         self.saved_hdf5_files = []
 
     def get_all_diagnostics(self):
+        kinetic = kinetic_energy(self.p, self.m)
+        temp = temperature(self.p, self.m, kinetic)
+        potentials = np.empty_like(self.potentials)
+        get_forces(self.r, potentials=potentials)
+        mean_r, std_r = mean_std(r)
+        mean_p, std_p = mean_std(p)
+        return dict(
+            kinetic_energy=kinetic,
+            temperature=temp,
+            potential_energy=potentials.sum(),
+            total_energy=kinetic+potential,
+            mean_r=mean_r,
+            std_r=std_r,
+            mean_p=mean_p,
+            std_p=std_p,
+            max_distance = max_distance,
+            min_distance = min_distance,
+        )
         return get_all_diagnostics(self.r, self.p, self.m, self.force_params, self.L)
 
     def update_diagnostics(self, i, diags=None):
@@ -104,9 +161,6 @@ class Simulation:
 
     def diagnostic_df(self):
         return pandas.DataFrame(self.diagnostic_values).T
-
-    def calculate_forces(self):
-        calculate_forces(self.r, out=self.forces, **self.force_params)
 
     def save_iteration(self, i, save_dense_files):
         path = save_iteration(
@@ -140,7 +194,7 @@ class Simulation:
         if save_dense_files is None:
             save_dense_files = self.save_dense_files
 
-        calculate_forces(self.r, L_for_PBC=self.L, out=self.forces, previous_forces = self.previous_forces, **self.force_params)
+        get_forces(self.r, self.forces, self.potentials)
 
         self.update_diagnostics(0)
         self.save_iteration(0, save_dense_files)
@@ -178,6 +232,12 @@ class Simulation:
         with open(json_path, "w") as f:
             json.dump(self.diagnostic_values, f)
         return self
+
+    def maxwellian_momenta(self, T):
+        """
+        as per https://scicomp.stackexchange.com/a/19971/22644
+        """
+        return np.random.normal(size=self.p.shape, scale=(T * k_B * self.m))
 
 
 # @click.command()

@@ -1,14 +1,11 @@
 import numpy as np
 
 import pytest
-from nbody.forces import calculate_forces
 from hypothesis import given, reproduce_failure
 from hypothesis.extra.numpy import arrays
 from hypothesis.strategies import floats, random_module
 
 from nbody.integrators import verlet_step
-from nbody.diagnostics import kinetic_energy
-
 N = 6
 N_iterations = 500
 dt = 1e-10

@@ -8,8 +8,6 @@ import numpy as np
 import math
 import git
 
-from nbody.constants import k_B
-
 try:
     import cupy
 
@@ -36,59 +34,7 @@ def get_git_information():
         return "CI RUN", ""
 
 
-def maxwellian_momenta(T, m, k_B=k_B):
-    """
-    as per https://scicomp.stackexchange.com/a/19971/22644
 
-    Parameters
-    ----------
-    T :
-    m :
-    k_B :
-
-    Returns
-    -------
-
-    """
-    return np.random.normal(size=(m.size, 3)) * (T * k_B * m) ** 0.5
-
-
-def initialize_matrices(N, m, q, dx, T, gpu=False):
-    # initialized on
-    m = np.full((N, 1), m, dtype=float)
-    q = np.full((N, 1), q, dtype=float)
-    p = np.zeros((N, 3), dtype=float)
-    p += maxwellian_momenta(T, m)
-    initialize_zero_cm_momentum(p)
-
-    r = np.empty((N, 3), dtype=float)
-    L = initialize_fcc_lattice(r, dx)
-
-    forces = np.empty_like(p)
-    movements = np.empty_like(r)
-    if gpu:
-        import cupy as cp
-
-        m_gpu = cp.asarray(m)
-        q_gpu = cp.asarray(q)
-        r_gpu = cp.asarray(r)
-        p_gpu = cp.asarray(p)
-        forces_gpu = cp.asarray(forces)
-        movements_gpu = cp.asarray(movements)
-        del m
-        del q
-        del r
-        del p
-        del forces
-        del movements
-        return m_gpu, q_gpu, r_gpu, p_gpu, forces_gpu, movements_gpu, L
-    else:
-        return m, q, r, p, forces, movements, L
-
-
-def initialize_zero_cm_momentum(p):
-    average_momentum = p.mean(axis=0)
-    p -= average_momentum
 
 
 def initialize_cubic_lattice(r, dx, dy=None, dz=None):

@@ -1,14 +1,12 @@
 import os
 import random
 import string
-from nbody.initial_conditions import create_openpmd_hdf5, maxwellian_momenta, k_B, save_xyz
+from nbody.initial_conditions import create_openpmd_hdf5, save_xyz
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 
 N = 3
-
-
 @pytest.fixture()
 def openpmd_file():
     random_id = "".join(random.choices(string.ascii_uppercase + string.digits, k=N))
@@ -18,22 +16,9 @@ def openpmd_file():
     f.close()
     os.remove(path)
 
-
 def test_openpmd_file(openpmd_file):
     path, f = openpmd_file
     return f.attrs
-
-
-def test_maxwellian_momenta():
-    N = 1000000
-    m = np.ones((N, 1))
-    T = 1
-    p = maxwellian_momenta(T, m)
-    atol = 1e-2
-    rtol = 1e-6
-    assert_allclose(0, p.mean(), atol=atol, rtol=rtol)
-    assert_allclose(p.var(), k_B * T / 1, atol=atol, rtol=rtol)
-    assert_allclose(p.var(axis=0), k_B * T / 1, atol=atol, rtol=rtol)
 
 def test_xyz():
     save_xyz("/tmp/test.xyz", np.random.random((10, 3)) * 10, "Ar")
