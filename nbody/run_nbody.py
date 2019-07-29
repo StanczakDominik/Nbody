@@ -9,9 +9,11 @@ import pandas
 from nbody.forces.numba_forces import get_forces
 
 from nbody.initial_conditions import (
-    create_openpmd_hdf5,
     initialize_cubic_lattice,
     initialize_fcc_lattice,
+)
+from nbody.io import (
+    create_openpmd_hdf5,
     save_to_hdf5,
     save_xyz
 )
@@ -104,8 +106,8 @@ class Simulation:
             save_every_x_iters=save_every_x_iters,
         )
 
-        self.m = np.full((N, 1), m, dtype=float)
-        self.q = np.full((N, 1), q, dtype=float)
+        self.m = np.full(N, m, dtype=float)
+        self.q = np.full(N, q, dtype=float)
         self.p = np.zeros((N, 3), dtype=float)
         self.p += self.maxwellian_momenta(T)
         # self.p -= p.mean(axis=0)
@@ -237,7 +239,7 @@ class Simulation:
         """
         as per https://scicomp.stackexchange.com/a/19971/22644
         """
-        return np.random.normal(size=self.p.shape, scale=(T * k_B * self.m))
+        return np.random.normal(size=self.p.shape, scale=(T * k_B * self.m[:, np.newaxis]))
 
 
 # @click.command()

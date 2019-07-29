@@ -1,7 +1,7 @@
 import os
 import random
 import string
-from nbody.initial_conditions import create_openpmd_hdf5, save_xyz
+from nbody.io import create_openpmd_hdf5, save_xyz
 import pytest
 import numpy as np
 from numpy.testing import assert_allclose

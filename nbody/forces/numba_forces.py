@@ -1,4 +1,5 @@
 import math
+import itertools
 import numpy as np
 import numba
 
@@ -18,8 +19,12 @@ def scalar_distance(r, distances, directions):
                 for dimension in range(dimensionality):
                     directions[particle_i,particle_j,dimension] /= scalar_distance
 
-@numba.njit(parallel=True)
-def get_forces(r, forces=None, potentials=None):
+@numba.njit(#['(float64[:,:], ' + ", ".join(x) + ')' for x in itertools.product(('float64[:,:]', 'optional(float64[:,:])'), repeat=3)],
+            parallel=True)
+def get_forces(r,
+               forces, potentials,
+               # distances=None,
+               ):
     number_particles, dimensionality = r.shape
     assert (forces is not None) or (potentials is not None)
 
@@ -34,11 +39,14 @@ def get_forces(r, forces=None, potentials=None):
                 assert square_distance > 0
                 repulsive_part = square_distance ** -3
                 attractive_part = repulsive_part ** 2
+
                 if forces is not None:
                     force_term = 2 * attractive_part - repulsive_part
                     force_on_i += (r[particle_i] - r[particle_j]) / square_distance * force_term
                 if potentials is not None:
                     potential_on_i += 2 * (attractive_part - repulsive_part)
+                # if distances is not None:
+                    # distances[particle_i, particle_j] = math.sqrt(square_distance)
 
         if forces is not None:
             forces[particle_i] = 24 * force_on_i
