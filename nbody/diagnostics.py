@@ -1,6 +1,6 @@
 import numpy as np
 from nbody.constants import k_B
-from nbody.forces.numpy_forces import calculate_potentials, lenard_jones_potential, get_distance_matrices
+from nbody.forces import calculate_potentials, get_distance_matrices
 
 try:
     import cupy
@@ -35,7 +35,7 @@ def get_all_diagnostics(r, p, m, force_params, L_for_PBC=None):
     kinetic = kinetic_energy(p, m)
     temp = temperature(p, m, kinetic)
     (distances_ij, directions_ij) = distances = get_distance_matrices(r, L_for_PBC)
-    potential = float(calculate_potentials(r, **force_params, L_for_PBC=L_for_PBC, distances = distances))
+    potential = float(calculate_potentials(r, **force_params, L_for_PBC=L_for_PBC, distances = distances).sum())
     min_distance = distances_ij.min()
     distances_ij[distances_ij == np.inf] = 0
     max_distance = distances_ij.max()
@@ -45,6 +45,7 @@ def get_all_diagnostics(r, p, m, force_params, L_for_PBC=None):
         kinetic_energy=kinetic,
         temperature=temp,
         potential_energy=potential,
+        total_energy=kinetic+potential,
         mean_r=mean_r,
         std_r=std_r,
         mean_p=mean_p,

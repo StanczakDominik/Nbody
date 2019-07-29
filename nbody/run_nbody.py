@@ -6,7 +6,7 @@ import click
 from tqdm import trange
 import pandas
 
-from nbody.forces.numpy_forces import calculate_forces
+from nbody.forces import calculate_forces
 
 from nbody.initial_conditions import (
     initialize_matrices,
@@ -87,7 +87,7 @@ class Simulation:
         self.m, self.q, self.r, self.p, self.forces, self.movements, self.L = initialize_matrices(
             N, m, q, dx, T, gpu=gpu
         )
-        self.previous_forces = self.forces.copy()
+        self.previous_forces = calculate_forces(self.r - self.p / self.m * self.dt)
 
         self.diagnostic_values = {}
         self.saved_hdf5_files = []

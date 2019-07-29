@@ -20,6 +20,7 @@ simulation_params = {
 }
 
 
+@pytest.mark.slow
 def test_run():
     np.random.seed(4)
     d = Simulation(**simulation_params).run()
@@ -48,7 +49,7 @@ gpu_simulation_params["file_path"] = "/tmp/nbody_gpu_test_run/data{0:08d}.h5"
 gpu_simulation_params["gpu"] = True
 
 
-@pytest.mark.skip
+@pytest.mark.slow
 @pytest.mark.gpu
 def test_gpu_run():
     d = Simulation(**gpu_simulation_params).run().diagnostic_values

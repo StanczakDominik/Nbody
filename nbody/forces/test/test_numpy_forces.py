@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from scipy.optimize import minimize_scalar
 
-from nbody.forces.numpy_forces import calculate_forces, calculate_potentials
+from nbody.forces import calculate_forces, calculate_potentials # TODO provide way of choosing algorithm
 from hypothesis import given
 from hypothesis.extra.numpy import arrays
 from hypothesis.strategies import floats
@@ -11,12 +11,12 @@ from hypothesis.strategies import floats
 @pytest.mark.parametrize(
     "r2, expected_force_on_1, expected_potential_on_1",
     [
-        [0.5, 24192, 16128],
-        [1, 0, 0],
-        [2, -0.369_140_625, -0.061_523_437_5],  # regression test
-        [-1, 0, 0],
-        [-2, 0.369_140_625, -0.061_523_437_5],  # regression test
-        [-0.5, -24192, 16128],
+        [0.5, -387072., 7936.],
+        [1, 0, -2],
+        [2, 0.36914062, -0.06201172],  # regression test
+        [-1, 0, -2],
+        [-2, -0.36914062, -0.06201172],  # regression test
+        [-0.5, 387072, 7936],
     ],
 )
 def test_lenard_jones_1d(r2, expected_force_on_1, expected_potential_on_1):
@@ -33,25 +33,26 @@ def test_lenard_jones_1d(r2, expected_force_on_1, expected_potential_on_1):
 
 
 def test_lenard_jones_1d_equilibrium():
-    force_params = {"diameter": 3.405e-10, "well_depth": 1.654_016_926_959_999_7e-21}
-    r2 = 3.840_547e-10
+    r2 = 1
 
     def get_potential_value(r2):
 
         r = np.vstack([(0.0, 0.0, 0.0), (r2, 0.0, 0.0)])
-        potential_energy = calculate_potentials(r, **force_params)
+        potential_energy = calculate_potentials(r).sum()
         return float(potential_energy)
 
-    r2_optimized = minimize_scalar(get_potential_value).x
+    optimization = minimize_scalar(get_potential_value)
+    r2_optimized = optimization.x
     np.testing.assert_allclose(r2, r2_optimized)
     # check force value
     r = np.vstack([(0, 0, 0), (r2_optimized, 0, 0)])
-    forces = calculate_forces(r, **force_params)
+    forces = calculate_forces(r)
     np.testing.assert_allclose(forces, 0, atol=1e-12)
 
 
-@given(r=arrays(np.float, (2, 3), floats(allow_infinity=False, allow_nan=False)))
-def test_lenard_jones_3d_reciprocity(r):
+def test_lenard_jones_3d_reciprocity():
+    r = np.array([[0.40102071, 0.68256306, 0.12088761],
+                  [0.29622769, 0.27855976, 0.51630947]])
     forces = calculate_forces(r)
     # check reciprocity (Newton's third law)
     np.testing.assert_allclose(forces[1], -forces[0])

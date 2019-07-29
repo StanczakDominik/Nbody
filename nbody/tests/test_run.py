@@ -6,29 +6,30 @@ import pytest
 from nbody.run_nbody import Simulation
 
 simulation_params = {
-    "force_params": {"diameter": 3.405e-10, "well_depth": 1.654_016_926_959_999_7e-21},
+    "force_params": {"diameter": 1, "well_depth": 1},
     "N": 32,
     "file_path": "/tmp/nbody_test_run/data{0:08d}.h5",
-    "N_iterations": 1000,
-    "dt": 1e-15,
+    "N_iterations": 100000,
+    "dt": 1e-6,
     "q": 0,
-    "m": 6.633_521_356_992e-26,
+    "m": 1,
     "T": 273,
-    "dx": 3.68e-10,
-    "save_every_x_iters": 100,
+    "dx": 1.1,
+    "save_every_x_iters": 30,
     "gpu": False,
 }
 
 
+tolerances = {
+        "total_energy": 1,
+        "std_r": 1e-8,
+    }
+@pytest.mark.slow
 def test_run():
     np.random.seed(4)
     d = Simulation(**simulation_params).run()
     df = d.diagnostic_df()
-    for key, tolerance in {
-        "kinetic_energy": 1e-11,
-        "potential_energy": 1e-11,
-        "std_r": 1e-8,
-    }.items():
+    for key, tolerance in tolerances.items():
         fitting = np.allclose(df.iloc[0][key], df.iloc[-1][key], atol=tolerance)
         if not fitting:
             df.plot('t', ['kinetic_energy', 'potential_energy'], logy=True)
@@ -48,6 +49,7 @@ gpu_simulation_params["gpu"] = True
 
 
 @pytest.mark.skip
+@pytest.mark.slow
 @pytest.mark.gpu
 def test_gpu_run():
     d = Simulation(**gpu_simulation_params).run().diagnostic_values
