@@ -15,7 +15,7 @@ extras_require={
 extras_require['all'] = list(set(chain(*extras_require.values())))
 
 setup(
-    name="NBody",
+    name="nbody",
     version="0.1.0",
     packages=find_packages(exclude=['benchmarks', 'prof', 'sourcedocs']),
     url="https://github.com/StanczakDominik/Nbody",
@@ -23,7 +23,7 @@ setup(
     author="Dominik Stańczak",
     author_email="stanczakdominik@gmail.com",
     description="molecular dynamics in Python on the GPU via numba.cuda",
-    install_requires="numba cupy numpy h5py matplotlib scipy click tqdm pandas gitpython".split(), 
+    install_requires="numba cupy numpy h5py matplotlib scipy click tqdm pandas gitpython".split(),
     extras_require=extras_require,
     project_urls={
         'Bug Reports': 'https://github.com/StanczakDominik/nbody/issues',

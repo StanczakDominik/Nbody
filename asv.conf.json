@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "project": "MD",
+    "project": "nbody",
     "project_url": "https://github.com/StanczakDominik/Nbody/",
     "repo": ".",
     "environment_type": "conda",
