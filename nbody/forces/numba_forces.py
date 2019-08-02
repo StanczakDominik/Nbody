@@ -19,20 +19,13 @@ def scalar_distance(r, distances, directions):
                 for dimension in range(dimensionality):
                     directions[particle_i,particle_j,dimension] /= scalar_distance
 
-# @numba.njit(#['(float64[:,:], ' + ", ".join(x) + ')' for x in itertools.product(('float64[:,:]', 'optional(float64[:,:])'), repeat=3)],
-#             parallel=True)
-def get_forces(r,
-               forces=None, potentials=None,
-               distances=None,
-               ):
+def get_forces_python(r, forces, potentials):
     number_particles, dimensionality = r.shape
-    assert (forces is not None) or (potentials is not None)
+    # assert (forces is not None) or (potentials is not None)
 
     for particle_i in numba.prange(number_particles):
-        if forces is not None:
-            force_on_i = np.zeros(dimensionality)
-        if potentials is not None:
-            potential_on_i = 0
+        force_on_i = np.zeros(dimensionality)
+        potential_on_i = 0
         for particle_j in range(number_particles):
             if particle_i != particle_j:
                 square_distance = np.sum((r[particle_i] - r[particle_j])**2)
@@ -45,11 +38,16 @@ def get_forces(r,
                     force_on_i += (r[particle_i] - r[particle_j]) / square_distance * force_term
                 if potentials is not None:
                     potential_on_i += 2 * (attractive_part - repulsive_part)
-                if distances is not None:
-                    distances[particle_i, particle_j] = math.sqrt(square_distance)
+                # if distances is not None:
+                #     distances[particle_i, particle_j] = math.sqrt(square_distance)
 
         if forces is not None:
             forces[particle_i] = 24 * force_on_i
         if potentials is not None:
             potentials[particle_i] = potential_on_i
 
+get_forces_njit = numba.njit()(get_forces_python)
+get_forces_njit_parallel = numba.njit(parallel=True)(get_forces_python)
+calculators = {'python': get_forces_python,
+               'njit': get_forces_njit,
+               'njit_parallel': get_forces_njit_parallel}

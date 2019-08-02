@@ -1,12 +1,13 @@
 import json
 import os
+import tempfile
 import numpy as np
 
 import click
 from tqdm import trange
 import pandas
 
-from nbody.forces.numba_forces import get_forces
+from nbody.forces.numba_forces import calculators
 
 from nbody.initial_conditions import (
     initialize_cubic_lattice,
@@ -35,24 +36,6 @@ def temperature(p, m, kinetic=None):
         kinetic = kinetic_energy(p, m)
     return float(kinetic * 2 / (k_B * Nf))
 
-def save_iteration(
-        hdf5_file,
-        i_iteration,
-        time,
-        dt,
-        r,
-        p,
-        m,
-        save_dense_files,
-        start_parameters=None,
-):
-    path = hdf5_file.format(i_iteration)
-    with create_openpmd_hdf5(path, start_parameters) as f:
-        if save_dense_files:
-            save_to_hdf5(f, i_iteration, time, dt, r, p, m)
-    save_xyz(path.replace(".h5", ".xyz"), r, "Ar")
-    return path
-
 
 def check_saving_time(i_iteration, save_every_x_iters=10):
     return (i_iteration % save_every_x_iters) == 0
@@ -61,12 +44,11 @@ def check_saving_time(i_iteration, save_every_x_iters=10):
 class Simulation:
     def __init__(
         self,
-        force_params,
+        force_params, # TODO remove
         N,
         N_iterations,
         dt,
         file_path,
-        q,
         m,
         T,
         dx,
@@ -74,6 +56,8 @@ class Simulation:
         gpu,
         save_dense_files=True,
         time_offset=0,
+        shape = None,
+        engine = 'njit_parallel'
     ):
         self.force_params = force_params
         self.N = N
@@ -84,7 +68,6 @@ class Simulation:
         self.dx = dx
         self.save_every_x_iters = save_every_x_iters
         self.save_dense_files = save_dense_files
-
         self.time_offset = time_offset
 
         # TODO remove
@@ -94,7 +77,6 @@ class Simulation:
             N_iterations=N_iterations,
             dt=dt,
             file_path=file_path,
-            q=q,
             m=m,
             T=T,
             dx=dx,
@@ -104,14 +86,19 @@ class Simulation:
         self.m = np.full(N, m, dtype=float)
         self.p = np.zeros((N, 3), dtype=float)
         self.p += self.maxwellian_momenta(T)
-        # self.p -= p.mean(axis=0)
 
         self.r = np.empty((N, 3), dtype=float)
-        self.L = initialize_fcc_lattice(self.r, self.dx)
+        if shape == 'fcc':
+            self.L = initialize_fcc_lattice(self.r, self.dx)
+        elif shape =='bcc':
+            self.L = initialize_bcc_lattice(self.r, self.dx)
+
+        self.extrapolate_old_r()
 
         self.forces = np.zeros_like(self.p)
         self.potentials = np.zeros_like(self.m)
         self.movements = np.zeros_like(self.r)
+        self.get_forces = calculators[engine]
 
         if gpu:
             import cupy as cp
@@ -126,11 +113,14 @@ class Simulation:
         self.diagnostic_values = {}
         self.saved_hdf5_files = []
 
+    def extrapolate_old_r(self):
+        self.old_r = self.r - self.p / self.m[:, np.newaxis] * self.dt # TODO check validity
+
     def get_all_diagnostics(self):
         kinetic = kinetic_energy(self.p, self.m)
         temp = temperature(self.p, self.m, kinetic)
         potentials = np.empty_like(self.potentials)
-        get_forces(self.r, potentials=potentials)
+        self.get_forces(self.r, forces=self.forces, potentials=potentials)
         total_potential = potentials.sum()
         return dict(
             kinetic_energy=kinetic,
@@ -150,28 +140,35 @@ class Simulation:
     def diagnostic_df(self):
         return pandas.DataFrame(self.diagnostic_values).T
 
+    def get_path(self, i=None):
+        if self.file_path is None:
+            return tempfile.NamedTemporaryFile(suffix=".h5").name
+        return self.file_path.format(i)
+
     def save_iteration(self, i, save_dense_files):
-        path = save_iteration(
-            self.file_path,
-            i,
-            self.dt * i + self.time_offset,
-            self.dt,
-            self.r,
-            self.p,
-            self.m,
-            save_dense_files,
-            self.start_parameters,
-        )
+        time = self.dt * i + self.time_offset
+        path = self.get_path(i)
+        with create_openpmd_hdf5(path, self.start_parameters) as f:
+            if save_dense_files:
+                save_to_hdf5(f, i, time, self.dt, self.r, self.p, self.m)
+        save_xyz(path.replace(".h5", ".xyz"), self.r, "Ar")
         self.saved_hdf5_files.append(path)
+        return path
 
     def step(self):
-        raise NotImplementedError
+        self.get_forces(self.r, self.forces, self.potentials)
+        new_r = -self.old_r + 2 * self.r + self.dt ** 2 * self.forces
+        self.p = (new_r - self.old_r) * self.m[:,np.newaxis] / (2 * self.dt)
+        self.old_r = self.r
+        self.r = new_r
 
-    def run(self, save_dense_files=None):
+    def run(self, save_dense_files=None, engine=None):
         if save_dense_files is None:
             save_dense_files = self.save_dense_files
+        if engine is not None:
+            self.get_forces = calculators[engine]
 
-        get_forces(self.r, self.forces, self.potentials)
+        self.get_forces(self.r, self.forces, self.potentials)
 
         self.update_diagnostics(0)
         self.save_iteration(0, save_dense_files)
@@ -204,7 +201,7 @@ class Simulation:
 
     def dump_json(self):
         json_path = os.path.join(
-            os.path.dirname(self.file_path), "diagnostic_results.json"
+            os.path.dirname(self.get_path()), "diagnostic_results.json"
         )
         with open(json_path, "w") as f:
             json.dump(self.diagnostic_values, f)
