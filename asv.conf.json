@@ -1,0 +1,12 @@
+{
+    "version": 1,
+    "project": "MD",
+    "project_url": "https://github.com/StanczakDominik/Nbody/",
+    "repo": ".",
+    "environment_type": "conda",
+    "show_commit_url": "http://github.com/StanczakDominik/Nbody/commit/",
+    "pythons": ["3.7"],
+    "env_dir": ".asv/env",
+    "results_dir": ".asv/results",
+    "html_dir": ".asv/html"
+}
