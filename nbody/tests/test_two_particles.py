@@ -42,7 +42,7 @@ def test_exponent_scaling(simulation):
     condition = 0 < coefficients[1] < 0.1
     if not condition:
         plot(df)
-    assert condition
+    assert condition, f"Coefficient value is {coefficients[1]:.3e}"
     
 @pytest.mark.xfail
 def test_unstable_exponent_scaling(unstable_simulation):
@@ -52,5 +52,5 @@ def test_unstable_exponent_scaling(unstable_simulation):
     condition = 0 < coefficients[1] < 0.1
     if condition:
         plot(df)
-    assert condition
+    assert condition, f"Coefficient value is {coefficients[1]:.3e}"
 

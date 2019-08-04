@@ -10,7 +10,6 @@ MAXFLOAT = 1e16
 @example(r=np.array([[0,0,0],[0,0,1]], dtype=float))
 @pytest.mark.parametrize('calc', calculators)
 def test_numba_forces(r, calc):
-    np.seterr(all='raise')
     forces = np.zeros_like(r)
     potentials = np.zeros(len(r), dtype=float)
     calculators[calc](r, forces=forces, potentials=potentials)

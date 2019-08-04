@@ -25,7 +25,7 @@ def get_forces_python(r, forces, potentials):
 
     for particle_i in numba.prange(number_particles):
         force_on_i = np.zeros(dimensionality)
-        potential_on_i = 0
+        potential_on_i = 0.0
         for particle_j in range(number_particles):
             if particle_i != particle_j:
                 square_distance = np.sum((r[particle_i] - r[particle_j])**2)

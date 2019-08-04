@@ -10,7 +10,7 @@ import pandas
 from nbody.forces.numba_forces import calculators
 
 from nbody.initial_conditions import (
-    initialize_cubic_lattice,
+    initialize_bcc_lattice,
     initialize_fcc_lattice,
 )
 from nbody.io import (
@@ -18,7 +18,6 @@ from nbody.io import (
     save_to_hdf5,
     save_xyz
 )
-from nbody.integrators import verlet_step, beeman_step
 from nbody.constants import k_B
 
 
@@ -87,7 +86,7 @@ class Simulation:
         self.p = np.zeros((N, 3), dtype=float)
         self.p += self.maxwellian_momenta(T)
 
-        self.r = np.empty((N, 3), dtype=float)
+        self.r = np.zeros((N, 3), dtype=float)
         if shape == 'fcc':
             self.L = initialize_fcc_lattice(self.r, self.dx)
         elif shape =='bcc':
@@ -142,18 +141,18 @@ class Simulation:
 
     def get_path(self, i=None):
         if self.file_path is None:
-            return tempfile.NamedTemporaryFile(suffix=".h5").name
+            return None
         return self.file_path.format(i)
 
     def save_iteration(self, i, save_dense_files):
-        time = self.dt * i + self.time_offset
         path = self.get_path(i)
-        with create_openpmd_hdf5(path, self.start_parameters) as f:
-            if save_dense_files:
-                save_to_hdf5(f, i, time, self.dt, self.r, self.p, self.m)
-        save_xyz(path.replace(".h5", ".xyz"), self.r, "Ar")
-        self.saved_hdf5_files.append(path)
-        return path
+        if path is not None:
+            time = self.dt * i + self.time_offset
+            with create_openpmd_hdf5(path, self.start_parameters) as f:
+                if save_dense_files:
+                    save_to_hdf5(f, i, time, self.dt, self.r, self.p, self.m)
+            save_xyz(path.replace(".h5", ".xyz"), self.r, "Ar")
+            self.saved_hdf5_files.append(path)
 
     def step(self):
         self.get_forces(self.r, self.forces, self.potentials)
@@ -163,6 +162,7 @@ class Simulation:
         self.r = new_r
 
     def run(self, save_dense_files=None, engine=None):
+        np.seterr('raise')
         if save_dense_files is None:
             save_dense_files = self.save_dense_files
         if engine is not None:
@@ -200,11 +200,12 @@ class Simulation:
         return self
 
     def dump_json(self):
-        json_path = os.path.join(
-            os.path.dirname(self.get_path()), "diagnostic_results.json"
-        )
-        with open(json_path, "w") as f:
-            json.dump(self.diagnostic_values, f)
+        path = self.get_path()
+        if path is not None:
+            json_path = os.path.join(os.path.dirname(path),
+                                     "diagnostic_results.json")
+            with open(json_path, "w") as f:
+                json.dump(self.diagnostic_values, f)
         return self
 
     def maxwellian_momenta(self, T):

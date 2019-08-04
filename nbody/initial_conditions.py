@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 
-def initialize_cubic_lattice(r, dx, dy=None, dz=None):
+def initialize_bcc_lattice(r, dx, dy=None, dz=None):
     N = r.shape[0]
     n_side = int(np.round(N ** (1 / 3)))  # np is not a bug here
     # assume N is a cube of a natural number
