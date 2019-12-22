@@ -4,7 +4,7 @@ import tempfile
 import numpy as np
 
 import click
-from tqdm import trange
+import tqdm
 import pandas
 
 from nbody.forces.numba_forces import calculators
@@ -127,7 +127,6 @@ class Simulation:
             potential_energy=total_potential,
             total_energy=kinetic+total_potential,
         )
-        return get_all_diagnostics(self.r, self.p, self.m, self.force_params, self.L)
 
     def update_diagnostics(self, i, diags=None):
         if diags is None:
@@ -154,12 +153,13 @@ class Simulation:
             save_xyz(path.replace(".h5", ".xyz"), self.r, "Ar")
             self.saved_hdf5_files.append(path)
 
-    def step(self):
-        self.get_forces(self.r, self.forces, self.potentials)
-        new_r = -self.old_r + 2 * self.r + self.dt ** 2 * self.forces
-        self.p = (new_r - self.old_r) * self.m[:,np.newaxis] / (2 * self.dt)
-        self.old_r = self.r
-        self.r = new_r
+    def step(self, run_n_iterations):
+        for i in range(run_n_iterations):
+            self.get_forces(self.r, self.forces, self.potentials)
+            new_r = -self.old_r + 2 * self.r + self.dt ** 2 * self.forces
+            self.p = (new_r - self.old_r) * self.m[:,np.newaxis] / (2 * self.dt)
+            self.old_r = self.r
+            self.r = new_r
 
     def run(self, save_dense_files=None, engine=None):
         np.seterr('raise')
@@ -173,27 +173,26 @@ class Simulation:
         self.update_diagnostics(0)
         self.save_iteration(0, save_dense_files)
 
-        with trange(1, self.N_iterations + 1) as t:
-            for i in t:
-                try:
-                    self.step()
+        try:
+            with tqdm.tqdm(initial=1, total=self.N_iterations + 1) as t:
+                number_saved_iters = (self.N_iterations + 1) // self.save_every_x_iters + 1
+                for i in range(number_saved_iters):
+                    self.step(self.save_every_x_iters)
+                    current_diagnostics = self.get_all_diagnostics()
+                    self.update_diagnostics(i*self.save_every_x_iters, current_diagnostics)
+                    t.set_postfix(
+                        kinetic_energy=current_diagnostics["kinetic_energy"],
+                        potential_energy=current_diagnostics["potential_energy"],
+                        temperature=current_diagnostics["temperature"],
+                    )
+                    self.save_iteration(i*self.save_every_x_iters, save_dense_files)
+                    t.update(self.save_every_x_iters)
 
-                    if check_saving_time(i, self.save_every_x_iters):
-                        current_diagnostics = self.get_all_diagnostics()
-                        self.update_diagnostics(i, current_diagnostics)
-
-                        t.set_postfix(
-                            kinetic_energy=current_diagnostics["kinetic_energy"],
-                            potential_energy=current_diagnostics["potential_energy"],
-                            temperature=current_diagnostics["temperature"],
-                        )
-
-                        self.save_iteration(i, save_dense_files)
-                except KeyboardInterrupt as e:
-                    print(f"Simulation interrupted by: {e}! Saving...")
-                    self.save_iteration(i, save_dense_files)
-                    self.dump_json()
-                    # raise Exception("Simulation interrupted!") from e
+        except KeyboardInterrupt as e:
+            print(f"Simulation interrupted by: {e}! Saving...")
+            self.save_iteration(i, save_dense_files)
+            self.dump_json()
+            # raise Exception("Simulation interrupted!") from e
 
         # self.save_iteration(self.N_iterations + 1, save_dense_files)
         self.dump_json()
