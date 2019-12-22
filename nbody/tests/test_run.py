@@ -11,7 +11,6 @@ simulation_params = {
     "file_path": "/tmp/nbody_test_run/data{0:08d}.h5",
     "N_iterations": 100000,
     "dt": 1e-6,
-    "q": 0,
     "m": 1,
     "T": 273,
     "dx": 1.1,

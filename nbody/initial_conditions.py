@@ -1,7 +1,16 @@
-
 import numpy as np
 import math
 
+def initialize_random_positions(r, dx, dy = None, dz = None):
+    if dy is None:
+        dy = dx
+    if dz is None:
+        dz = dx
+    N = len(r)
+    r[:, 0] = np.random.uniform(0, dx, N)
+    r[:, 1] = np.random.uniform(0, dy, N)
+    r[:, 2] = np.random.uniform(0, dz, N)
+    
 
 def initialize_bcc_lattice(r, dx, dy=None, dz=None):
     N = r.shape[0]
@@ -21,7 +30,6 @@ def initialize_bcc_lattice(r, dx, dy=None, dz=None):
                 index_in_N = n_side ** 2 * i + n_side * j + k
                 r[index_in_N] = np.array((i * dx, j * dy, k * dz))
     r += (dx / 2, dy / 2, dz / 2)
-    return n_side * dx
 
 
 def initialize_fcc_lattice(r, dx, dy=None, dz=None):
@@ -45,6 +53,3 @@ def initialize_fcc_lattice(r, dx, dy=None, dz=None):
                 r[index_in_N + 2] = np.array(((i + 0.5) * dx, j * dy, (k + 0.5) * dz))
                 r[index_in_N + 3] = np.array((i * dx, (j + 0.5) * dy, (k + 0.5) * dz))
     r += (dx / 4, dy / 4, dz / 4)
-    return n_side * dx
-
-

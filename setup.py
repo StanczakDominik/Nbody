@@ -10,6 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 extras_require={
     'test': ['coverage', 'pytest', 'hypothesis'],
     'dev': ['asv', 'perfplot', 'pudb', 'pytest-profiling'],
+    'gpu': ['cupy'],
 }
 
 extras_require['all'] = list(set(chain(*extras_require.values())))
@@ -23,7 +24,7 @@ setup(
     author="Dominik Stańczak",
     author_email="stanczakdominik@gmail.com",
     description="molecular dynamics in Python on the GPU via numba.cuda",
-    install_requires="numba cupy numpy h5py matplotlib scipy click tqdm pandas gitpython".split(),
+    install_requires="numba numpy h5py matplotlib scipy click tqdm pandas gitpython".split(),
     extras_require=extras_require,
     project_urls={
         'Bug Reports': 'https://github.com/StanczakDominik/nbody/issues',

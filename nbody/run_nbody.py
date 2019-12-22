@@ -12,6 +12,7 @@ from nbody.forces.numba_forces import calculators
 from nbody.initial_conditions import (
     initialize_bcc_lattice,
     initialize_fcc_lattice,
+    initialize_random_positions,
 )
 from nbody.io import (
     create_openpmd_hdf5,
@@ -87,10 +88,12 @@ class Simulation:
         self.p += self.maxwellian_momenta(T)
 
         self.r = np.zeros((N, 3), dtype=float)
-        if shape == 'fcc':
-            self.L = initialize_fcc_lattice(self.r, self.dx)
+        if shape == 'gas':
+            initialize_random_positions(self.r, self.dx)
+        elif shape == 'fcc':
+            initialize_fcc_lattice(self.r, self.dx)
         elif shape =='bcc':
-            self.L = initialize_bcc_lattice(self.r, self.dx)
+            initialize_bcc_lattice(self.r, self.dx)
 
         self.extrapolate_old_r()
 

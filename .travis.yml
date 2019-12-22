@@ -16,7 +16,7 @@ install:
   - pip install codecov
   - conda env create -q -f environment.yml
   - source activate nbody
-  - python setup.py install
+  - pip install .[test,dev]
 
 script: pytest -m 'not gpu' nbody 
 
