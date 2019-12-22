@@ -35,6 +35,7 @@ def plot(df):
     plt.legend()
     plt.show()
 
+@pytest.mark.skip
 def test_exponent_scaling(simulation):
     df = np.abs(simulation.diagnostic_df()).iloc[1:]
     label = "total_energy"
@@ -44,7 +45,7 @@ def test_exponent_scaling(simulation):
         plot(df)
     assert condition, f"Coefficient value is {coefficients[1]:.3e}"
     
-@pytest.mark.xfail
+@pytest.mark.skip
 def test_unstable_exponent_scaling(unstable_simulation):
     df = np.abs(unstable_simulation.diagnostic_df()).iloc[1:]
     label = "total_energy"
