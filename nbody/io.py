@@ -5,15 +5,7 @@ import json
 import time
 import git
 import h5py
-
-try:
-    import cupy
-
-    to_numpy = cupy.asnumpy
-    get_array_module = lambda *args, **kwargs: cupy.get_array_module(*args, **kwargs)
-except ImportError:
-    to_numpy = lambda x: x
-    get_array_module = lambda *args, **kwargs: np
+from .compat import to_numpy, get_array_module
 
 def get_git_information():
     if "TRAVIS" not in os.environ:

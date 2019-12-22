@@ -1,11 +1,6 @@
 import numpy as np
 
-try:
-    import cupy
-    get_array_module = lambda *args, **kwargs: cupy.get_array_module(*args, **kwargs)
-except ImportError:
-    get_array_module = lambda *args, **kwargs: np
-
+from compat import get_array_module
 
 def get_distance_matrices(r, L_for_PBC, directions = True):
     xp = get_array_module(r)
