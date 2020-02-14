@@ -94,6 +94,11 @@ class Simulation:
             initialize_fcc_lattice(self.r, self.dx)
         elif shape =='bcc':
             initialize_bcc_lattice(self.r, self.dx)
+        elif shape is None:
+            raise ValueError("Need a 'shape' argument!")
+        else:
+            assert self.r.shape == shape.shape
+            self.r[...] = shape
 
         self.extrapolate_old_r()
 
