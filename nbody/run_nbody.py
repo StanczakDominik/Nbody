@@ -7,7 +7,7 @@ import click
 import tqdm
 import pandas
 
-from nbody.forces.numba_forces import calculators
+from nbody.forces.numba_forces import calculators, wall_forces
 
 from nbody.initial_conditions import (
     initialize_bcc_lattice,
@@ -54,6 +54,7 @@ class Simulation:
         time_offset=0,
         shape=None,
         engine="njit_parallel",
+        wall_constant=1000,
     ):
         self.force_params = force_params
         self.N = N
@@ -65,6 +66,7 @@ class Simulation:
         self.save_every_x_iters = save_every_x_iters
         self.save_dense_files = save_dense_files
         self.time_offset = time_offset
+        self.wall_constant = wall_constant
 
         # TODO remove
         self.start_parameters = dict(
@@ -102,6 +104,7 @@ class Simulation:
         self.potentials = np.zeros_like(self.m)
         self.movements = np.zeros_like(self.r)
         self.get_forces = calculators[engine]
+        self.wall_forces = wall_forces[engine]
 
         if gpu:
             import cupy as cp
@@ -162,6 +165,7 @@ class Simulation:
     def step(self, run_n_iterations):
         for i in range(run_n_iterations):
             self.get_forces(self.r, self.forces, self.potentials)
+            self.wall_forces(self.r, self.forces, self.dx, self.wall_constant)
             new_r = -self.old_r + 2 * self.r + self.dt ** 2 * self.forces
             self.p = (new_r - self.old_r) * self.m[:, np.newaxis] / (2 * self.dt)
             self.old_r = self.r
@@ -175,6 +179,7 @@ class Simulation:
             self.get_forces = calculators[engine]
 
         self.get_forces(self.r, self.forces, self.potentials)
+        self.wall_forces(self.r, self.forces, self.dx, self.wall_constant)
 
         self.update_diagnostics(0)
         self.save_iteration(0, save_dense_files)

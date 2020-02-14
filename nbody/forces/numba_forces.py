@@ -51,10 +51,31 @@ def get_forces_python(r, forces, potentials):
             potentials[particle_i] = potential_on_i
 
 
+def add_wall_forces_python(r, forces, L, constant, exponent=2):
+    number_particles, dimensionality = r.shape
+    for particle_i in numba.prange(number_particles):
+        R = r[particle_i]
+        for i in range(3):
+            if R[i] < 0:
+                forces[particle_i, i] += constant * R[i] ** exponent
+            elif R[i] > L:
+                forces[particle_i, i] -= constant * (R[i] - L) ** exponent
+
+
 get_forces_njit = numba.njit()(get_forces_python)
 get_forces_njit_parallel = numba.njit(parallel=True)(get_forces_python)
+
+add_wall_forces_njit = numba.njit()(add_wall_forces_python)
+add_wall_forces_njit_parallel = numba.njit(parallel=True)(add_wall_forces_python)
+
 calculators = {
     "python": get_forces_python,
     "njit": get_forces_njit,
     "njit_parallel": get_forces_njit_parallel,
+}
+
+wall_forces = {
+    "python": add_wall_forces_python,
+    "njit": add_wall_forces_njit,
+    "njit_parallel": add_wall_forces_njit_parallel,
 }

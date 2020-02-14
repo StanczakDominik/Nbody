@@ -12,7 +12,7 @@ simulation_params = {
     "N_iterations": 100000,
     "dt": 1e-6,
     "m": 1,
-    "T": 273,
+    "T": 1,
     "dx": 1.1,
     "save_every_x_iters": 30,
     "gpu": False,
