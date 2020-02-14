@@ -16,6 +16,7 @@ simulation_params = {
     "dx": 1.1,
     "save_every_x_iters": 30,
     "gpu": False,
+    "shape": 'gas',
 }
 
 
