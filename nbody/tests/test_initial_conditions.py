@@ -8,6 +8,8 @@ from numpy.testing import assert_allclose
 from nbody.run_nbody import Simulation
 
 N = 3
+
+
 @pytest.fixture()
 def openpmd_file(tmp_path):
     random_id = "".join(random.choices(string.ascii_uppercase + string.digits, k=N))
@@ -17,9 +19,11 @@ def openpmd_file(tmp_path):
     f.close()
     os.remove(path)
 
+
 def test_openpmd_file(openpmd_file):
     path, f = openpmd_file
     return f.attrs
+
 
 def test_xyz():
     save_xyz("/tmp/test.xyz", np.random.random((10, 3)) * 10, "Ar")
@@ -36,8 +40,10 @@ simulation_params = {
     "dx": 1.1,
     "save_every_x_iters": 30,
     "gpu": False,
-    "shape": 'gas',
+    "shape": "gas",
 }
+
+
 def test_well_initialized():
     np.random.seed(4)
     d = Simulation(**simulation_params)

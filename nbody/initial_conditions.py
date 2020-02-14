@@ -1,7 +1,8 @@
 import numpy as np
 import math
 
-def initialize_random_positions(r, dx, dy = None, dz = None):
+
+def initialize_random_positions(r, dx, dy=None, dz=None):
     if dy is None:
         dy = dx
     if dz is None:
@@ -10,7 +11,7 @@ def initialize_random_positions(r, dx, dy = None, dz = None):
     r[:, 0] = np.random.uniform(0, dx, N)
     r[:, 1] = np.random.uniform(0, dy, N)
     r[:, 2] = np.random.uniform(0, dz, N)
-    
+
 
 def initialize_bcc_lattice(r, dx, dy=None, dz=None):
     N = r.shape[0]

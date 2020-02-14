@@ -1,1 +1,1 @@
-pytest_plugins = ['pytest_profiling']
+pytest_plugins = ["pytest_profiling"]

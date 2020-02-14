@@ -1,15 +1,18 @@
 import numpy as np
 import numba
-from . import numba_forces, numpy_forces#, numba_cuda_forces
+from . import numba_forces  # , numba_cuda_forces
+
 CHOSEN_INTEGRATOR_MODULE = numba_forces
+
 
 @numba.njit
 def lenard_jones_potential(r, well_depth=1, diameter=1):
     """
     http://phys.ubbcluj.ro/~tbeu/MD/C2_for.pdf
     """
-    scaled6 = (diameter / r)**6
+    scaled6 = (diameter / r) ** 6
     return 4 * well_depth * (scaled6 ** 2 - 2 * scaled6)
+
 
 @numba.njit
 def lenard_jones_force(r, well_depth=1, diameter=1):
@@ -31,18 +34,17 @@ def lenard_jones_force(r, well_depth=1, diameter=1):
     """
     scaled = diameter / r
     scaled6 = scaled ** 6
-    return 48 * well_depth * (- scaled6 **2 + scaled6) / r
-
+    return 48 * well_depth * (-(scaled6 ** 2) + scaled6) / r
 
 
 def calculate_forces(
-        r: np.ndarray,
-        force_law=lenard_jones_force,
-        L_for_PBC=None,
-        out=None,
-        distances=None,
-        *args,
-        **kwargs,
+    r: np.ndarray,
+    force_law=lenard_jones_force,
+    L_for_PBC=None,
+    out=None,
+    distances=None,
+    *args,
+    **kwargs,
 ):
     """
 
@@ -70,8 +72,10 @@ def calculate_forces(
     if distances is not None:
         distances_ij, directions_ij = distances
     else:
-        distances_ij, directions_ij = CHOSEN_INTEGRATOR_MODULE.get_distance_matrices(r, L_for_PBC)
-    np.fill_diagonal(distances_ij, np.inf) # no self force
+        distances_ij, directions_ij = CHOSEN_INTEGRATOR_MODULE.get_distance_matrices(
+            r, L_for_PBC
+        )
+    np.fill_diagonal(distances_ij, np.inf)  # no self force
     forces = force_law(distances_ij)
     return np.sum(forces[..., np.newaxis] * directions_ij, axis=0, out=out)
 
@@ -81,7 +85,7 @@ def calculate_potentials(
     potential_law=lenard_jones_potential,
     L_for_PBC=None,
     out=None,
-    distances = None,
+    distances=None,
     *args,
     **kwargs,
 ):
@@ -111,8 +115,9 @@ def calculate_potentials(
     if distances is not None:
         distances_ij, _ = distances
     else:
-        distances_ij = CHOSEN_INTEGRATOR_MODULE.get_distance_matrices(r, L_for_PBC, directions=False)
-    np.fill_diagonal(distances_ij, np.inf) # no self force
+        distances_ij = CHOSEN_INTEGRATOR_MODULE.get_distance_matrices(
+            r, L_for_PBC, directions=False
+        )
+    np.fill_diagonal(distances_ij, np.inf)  # no self force
     potentials = potential_law(distances_ij)
     return np.sum(potentials, axis=0, out=out) / 2
-

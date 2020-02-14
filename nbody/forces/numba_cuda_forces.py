@@ -11,6 +11,7 @@ else:
     bits = 32
     np_type = np.float32
 
+
 @cuda.jit("void(float{}[:, :], float{}[:, :])".format(bits, bits))
 def _distance_matrix(mat, out):
     m = mat.shape[0]

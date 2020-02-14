@@ -16,14 +16,13 @@ simulation_params = {
     "dx": 1.1,
     "save_every_x_iters": 30,
     "gpu": False,
-    "shape": 'gas',
+    "shape": "gas",
 }
 
 
-tolerances = {
-        "total_energy": 1,
-        "std_r": 1e-8,
-    }
+tolerances = {"total_energy": 1, "std_r": 1e-8}
+
+
 @pytest.mark.slow
 def test_run():
     np.random.seed(4)
@@ -32,8 +31,8 @@ def test_run():
     for key, tolerance in tolerances.items():
         fitting = np.allclose(df.iloc[0][key], df.iloc[-1][key], atol=tolerance)
         if not fitting:
-            df.plot('t', ['kinetic_energy', 'potential_energy'], logy=True)
-            df.plot('t', ['min_distance', 'max_distance'], grid=True)
+            df.plot("t", ["kinetic_energy", "potential_energy"], logy=True)
+            df.plot("t", ["min_distance", "max_distance"], grid=True)
             plt.show()
             break
     if not fitting:

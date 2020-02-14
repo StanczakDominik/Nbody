@@ -7,6 +7,7 @@ import git
 import h5py
 from .compat import to_numpy, get_array_module
 
+
 def get_git_information():
     if "TRAVIS" not in os.environ:
         path = os.path.dirname(os.path.dirname(__file__))
@@ -21,6 +22,7 @@ def get_git_information():
         return repo_state, diff
     else:
         return "CI RUN", ""
+
 
 def create_openpmd_hdf5(path, start_parameters=None):
     dirname = os.path.dirname(path)
@@ -100,6 +102,7 @@ def save_to_hdf5(f: h5py.File, iteration, time, dt, r, p, m):
     mass.attrs["unitSI"] = 1.0
     mass.attrs["unitDimension"] = openPMD_mass
     mass.attrs["timeOffset"] = 0.0
+
 
 def save_xyz(filename, r, atom_name, comment="comment"):
     with open(filename, "w") as f:

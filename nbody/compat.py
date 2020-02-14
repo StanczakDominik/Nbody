@@ -1,4 +1,5 @@
 import numpy as np
+
 try:
     import cupy
 
@@ -7,4 +8,3 @@ try:
 except ImportError:
     to_numpy = lambda x: x
     get_array_module = lambda *args, **kwargs: np
-
