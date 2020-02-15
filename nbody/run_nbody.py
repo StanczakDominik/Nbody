@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 import numpy as np
+import pathlib
 
 import click
 import tqdm
@@ -74,7 +75,7 @@ class Simulation:
             N=N,
             N_iterations=N_iterations,
             dt=dt,
-            file_path=file_path,
+            file_path=str(file_path),
             m=m,
             T=T,
             dx=dx,
@@ -150,7 +151,7 @@ class Simulation:
     def get_path(self, i=None):
         if self.file_path is None:
             return None
-        return self.file_path.format(i)
+        return pathlib.Path(str(self.file_path).format(i))
 
     def save_iteration(self, i, save_dense_files):
         path = self.get_path(i)
@@ -159,7 +160,7 @@ class Simulation:
             with create_openpmd_hdf5(path, self.start_parameters) as f:
                 if save_dense_files:
                     save_to_hdf5(f, i, time, self.dt, self.r, self.p, self.m)
-            save_xyz(path.replace(".h5", ".xyz"), self.r, "Ar")
+            save_xyz(path.with_suffix(".xyz"), self.r, "Ar")
             self.saved_hdf5_files.append(path)
 
     def step(self, run_n_iterations):
@@ -214,7 +215,7 @@ class Simulation:
         return self
 
     def dump_json(self):
-        path = self.get_path()
+        path = self.get_path(0)
         if path is not None:
             json_path = os.path.join(os.path.dirname(path), "diagnostic_results.json")
             with open(json_path, "w") as f:
